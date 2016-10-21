@@ -1,0 +1,105 @@
+; Permissions
+permission-name-access-plugin = "Access Gitt'r"
+permission-name-create-projects = "Create projects"
+
+; Settings form
+settings-form-title = "H gitter settings"
+settings-form-default-folder-label = "Default repositories folder"
+settings-form-folder-not-exists = "This folder does not exists on your server"
+
+; Menu
+menu-title = "Gitt'r"
+
+; Projects list
+projects-list-title = "Gitt'r Projects"
+new-project-btn = "New project"
+projects-list-name-label = "Project name"
+projects-list-description-label = "Description"
+projects-list-ctime-label = "Creation date"
+projects-list-userId-label = "Project owner"
+
+; Project edition
+edit-project-title[0] = "Create a project"
+edit-project-title[1] = "Edit a project"
+edit-project-title[p] = "Edit a project"
+
+edit-project-global-legend = "Global information"
+edit-project-name-label = "Project name"
+edit-project-description-label = "Description"
+
+edit-project-privileges-legend = "Project participants"
+edit-project-add-user-label = "Add a user to the project"
+edit-project-add-user-placeholder = "Type the username of a user"
+edit-project-privivileges-username-label = "User"
+edit-project-privivileges-master-label = "Master privileges ?"
+remove-project-user-confirm = "De you really want to remove this user from this project ?"
+
+; Repositories list
+repos-list-title = "Gitt'r Project : {project}"
+new-repo-btn = "New repository"
+repos-list-name-label = "Repository name"
+repos-list-description-label = "Description"
+repos-list-mtime-label = "Last modification"
+
+; Reporitory edition
+edit-repo-title = "Create / Edit a reporitory "
+edit-repo-global-legend = "General information"
+edit-repo-existing-repo-label = "Create from an existing reporitory ?"
+edit-repo-name-label = "Repository name"
+edit-repo-path-label = "Repository absolute path"
+edit-repo-description-label = "Description"
+edit-repo-privileges-legend = "Repository privileges"
+edit-repo-privivileges-username-label = "User"
+edit-repo-privivileges-master-label = "Master privileges on the repository ?"
+
+; Repository page
+repo-index-title = "Repository : {repo}"
+repo-menu-item-home = "Repository"
+repo-menu-item-code = "Code"
+repo-menu-item-commits = "Commits"
+repo-menu-item-branches = "Branches"
+repo-menu-item-tags = "Tags"
+repo-menu-item-issues = "Issues"
+repo-menu-item-merge-requests = "Merge requests"
+repo-menu-item-settings = "Settings"
+
+; Repository sidebar widget
+back-project-btn = "Project : {project}"
+clone-repo-title = "Clone with SSH"
+clone-repo-description = "You need to export a SSH key in your settings"
+
+; Repository code
+repo-code-branch-label = "Branch : "
+
+; Commits list
+repo-commits-date-separator = "Commits on {date}"
+repo-commits-time-and-author = "By {author} at {time}"
+repo-commits-browse-files = "Browse files"
+
+; Commit details
+commit-commited-by = "Commit by <b>{author}</b> on {date}"
+commit-parent-label = "Parent : "
+commit-no-parent = "No parent"
+commit-difference-label-intro = "Showing "
+commit-difference-label-changed-filed = "{files} changed files"
+commit-difference-label-outro = ", with <b class="text-success">{additions} additions</b> and <b class="text-danger">{deletions} deletions</b>."
+commit-file-differences = "{additions} additions, {deletions} deletions"
+commit-view-file-btn = "View file"
+
+; Widget to choose a revision in the code browser
+choose-revision-widget-branch = "Branch : {revision}"
+choose-revision-widget-tag = "Tag : {revision}"
+choose-revision-widget-commit = "Revision : {revision}"
+choose-revision-widget-title = "Switch branches / tags"
+choose-revision-widget-placeholder = "Type a branch or a tag"
+
+; Branches list
+new-branch-btn = "Create branch"
+new-merge-request-btn = "New merge request"
+last-branch-update = "Updated on {date} by {user}"
+delete-branch-title = "Delete the branch"
+branch-merged = "Merged"
+branch-default = "Default"
+branch-diff-ahead = "{ahead} commits ahead {default}"
+branch-diff-behind = "{behind} commits behind {default}"
+branch-diff-ahead-behind = "{ahead} commits ahead, {behind} commits behind {default}"
