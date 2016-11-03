@@ -64,17 +64,10 @@ class BranchController extends Controller {
             'navigation' => false,
             'noHeader' => true,
             'data' => $branches,
-            'controls' => array(
-                array (
-                    'icon' => 'plus',
-                    'class' => 'btn-primary',
-                    'label' => Lang::get($this->_plugin . '.new-branch-btn')
-                )
-            ),
             'fields' => array(
                 'name' => array(
                     'display' => function($value, $field, $branch) use ($repo){
-                        return View::make($this->getPlugin()->getView('repo-branches-name.tpl'), array(
+                        return View::make($this->getPlugin()->getView('branches/list-name-cell.tpl'), array(
                             'branch' => $branch,
                             'repo' => $repo
                         ));
@@ -83,7 +76,7 @@ class BranchController extends Controller {
 
                 'ahead' => array (
                     'display' => function($value, $field, $branch) {
-                        return View::make($this->getPLugin()->getView('repo-branches-diff.tpl'), array(
+                        return View::make($this->getPLugin()->getView('branches/list-diff-cell.tpl'), array(
                             'branch' => $branch
                         ));
                     }
@@ -97,7 +90,11 @@ class BranchController extends Controller {
                         if(!$branch->default) {
                             $result .= new ButtonInput(array(
                                 'icon' => 'trash',
-                                'class' => 'btn-danger pull-right',
+                                'class' => 'btn-danger pull-right delete-branch',
+                                'href' => App::router()->getUri('h-gitter-repo-branch', array(
+                                    'repoId' => $this->repoId,
+                                    'branch' => $branch->name
+                                )),
                                 'title' => Lang::get($this->_plugin . '.delete-branch-title')
                             ));
 
@@ -116,7 +113,16 @@ class BranchController extends Controller {
             )
         ));
 
-        $content = $list->display();
+        if($list->isRefreshing()) {
+            return $list->display();
+        }
+
+        $this->addKeysToJavaScript($this->_plugin . '.delete-branch-confirmation');
+
+        $content = View::make($this->getPlugin()->getView('branches/list.tpl'), array(
+            'form' => $this->edit(),
+            'list' => $list
+        ));
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
@@ -128,8 +134,65 @@ class BranchController extends Controller {
      * Create a new branch on the repository
      * @return array The result as array
      */
-    public function create() {
+    public function edit() {
+        $repo = Repo::getById($this->repoId);
 
+        $branches = $repo->getBranches();
+
+        $form = new Form(array(
+            'id' => 'h-gitter-branch-form',
+            'action' => App::router()->getUri('h-gitter-repo-branch', array(
+                'repoId' => $this->repoId,
+                'branch' => '$'
+            )),
+            'inputs' => array(
+                new TextInput(array(
+                    'name' => 'name',
+                    'required' => true,
+                    'label' => Lang::get($this->_plugin . '.new-branch-form-name-label')
+                )),
+
+                new SelectInput(array(
+                    'name' => 'from',
+                    'required' => true,
+                    'default' => 'master',
+                    'options' => array_combine($branches, $branches),
+                    'label' => Lang::get($this->_plugin . '.new-branch-form-from-label'),
+                    'nl' => false
+                )),
+
+                new SubmitInput(array(
+                    'name' => 'submit',
+                    'value' => Lang::get($this->_plugin . '.new-branch-form-submit-label')
+                ))
+            ),
+            'onsuccess' => 'app.lists["h-gitter-repo-branches-list"].refresh();'
+        ));
+
+        switch($form->submitted()) {
+            case false :
+                return $form->display();
+
+            case 'delete' :
+                $repo->deleteBranch($this->branch, true);
+
+                App::response()->setStatus(204);
+                return;
+
+            default :
+                if($form->check()){
+                    if(in_array($form->getData('name'), $branches)) {
+                        $form->error('name', Lang::get($this->_plugin . '.new-branch-form-name-already-exists'));
+
+                        return $form->response(Form::STATUS_CHECK_ERROR);
+                    }
+
+                    $repo->createBranch($form->getData('name'), $form->getData('from'));
+
+                    return $form->response(Form::STATUS_SUCCESS);
+                }
+                break;
+        }
     }
 
     /**

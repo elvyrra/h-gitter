@@ -37,7 +37,7 @@ class CommitController extends Controller {
             $byDayCommits[$formattedDate][] = $commit;
         }
 
-        $content = View::make($this->getPlugin()->getView('repo-commits-list.tpl'), array(
+        $content = View::make($this->getPlugin()->getView('commits/list.tpl'), array(
             'repo' => $repo,
             'allCommits' => $byDayCommits
         ));
@@ -61,7 +61,7 @@ class CommitController extends Controller {
 
         $diff = $repo->getDiff($commit->parent ? $commit->hash . '^1' : '', $commit->hash);
 
-        $content = View::make($this->getPlugin()->getView('commit-details.tpl'), array(
+        $content = View::make($this->getPlugin()->getView('commits/commit.tpl'), array(
             'repo' => $repo,
             'commit' => $commit,
             'diff' => $diff,

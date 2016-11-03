@@ -118,12 +118,53 @@ App::router()->auth(App::session()->isAllowed('h-gitter.access-plugin'), functio
                 'action' => 'BranchController.index'
             ));
 
-            // Display a branch
-            App::router()->get('h-gitter-repo-branch', '/{repoId}/branches/{branch}', array(
+            // Compare a branch with the default repository branch
+            App::router()->get('h-gitter-repo-compare-branches', '/{repoId}/branches/{branch}/compare', array(
                 'where' => array(
                     'repoId' => '\d+'
                 ),
-                'action' => 'BranchController.branch'
+                'action' => 'BranchController.compare'
+            ));
+
+            // Create / Delete a branch
+            App::router()->any('h-gitter-repo-branch', '/{repoId}/branches/{branch}', array(
+                'where' => array(
+                    'repoId' => '\d+'
+                ),
+                'action' => 'BranchController.edit'
+            ));
+
+            App::router()->any('h-gitter-repo-branch-info', '/{repoId}/branches/{branch}/info', array(
+                'where' => array(
+                    'repoId' => '\d+'
+                ),
+                'action' => 'BranchController.info'
+            ));
+
+            // List the repository merge requests
+            App::router()->get('h-gitter-repo-merge-requests', '/{repoId}/merge-requests', array(
+                'where' => array(
+                    'repoId' => '\d+'
+                ),
+                'action' => 'MergeRequestController.index'
+            ));
+
+            // Create / Edit / Delete a merge request
+            App::router()->any('h-gitter-repo-merge-request', '/{repoId}/merge-requests/{mergeRequestId}', array(
+                'where' => array(
+                    'repoId' => '\d+',
+                    'mergeRequestId' => '\d+'
+                ),
+                'action' => 'MergeRequestController.edit'
+            ));
+
+            // Display a merge request
+            App::router()->get('h-gitter-repo-display-merge-request', '/{repoId}/merge-requests/{mergeRequestId}/display', array(
+                'where' => array(
+                    'repoId' => '\d+',
+                    'mergeRequestId' => '\d+'
+                ),
+                'action' => 'MergeRequestController.display'
             ));
         });
     });

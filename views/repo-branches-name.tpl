@@ -1,2 +1,0 @@
-<div class="lead"><a href="{uri action='h-gitter-repo-code-folder' repoId='{$repo->id}' revision='{$branch->name}'}">{{ $branch->name }}</a></div>
-{text key="h-gitter.last-branch-update" date="{$branch->date}" user="{$branch->author}"}

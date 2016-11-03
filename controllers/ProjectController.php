@@ -59,13 +59,13 @@ class ProjectController extends Controller {
     }
 
     public function edit() {
+        $project = Project::getById($this->projectId);
         if(empty($this->projectId)) {
             if(!App::session()->isAllowed($this->_plugin . '.create-projects')) {
                 throw new ForbiddenException();
             }
         }
         else {
-            $project = Project::getById($this->projectId);
 
             if(!$project->isUserMaster()) {
                 throw new ForbiddenException();
@@ -86,6 +86,9 @@ class ProjectController extends Controller {
         $form = new Form(array(
             'id' => 'h-gitter-project-form',
             'model' => 'Project',
+            'reference' => array(
+                'id' => $this->projectId
+            ),
             'object' => $project,
             'fieldsets' => array(
                 'global' => array(

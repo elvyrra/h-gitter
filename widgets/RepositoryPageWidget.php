@@ -8,7 +8,7 @@ class RepositoryPageWidget extends Widget {
 
         $project = $repo->getProject();
 
-        return View::make($this->getPlugin()->getView('repository-widget.tpl'), array(
+        return View::make($this->getPlugin()->getView('widgets/repository-widget.tpl'), array(
             'project' => $project,
             'repo' => $repo
         ));

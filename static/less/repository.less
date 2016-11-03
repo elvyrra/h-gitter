@@ -93,38 +93,6 @@
             font-weight: bold;
         }
     }
-
-
-    .file-diff {
-        font-family: monospace;
-        width: calc(~"100% + 3rem");
-        margin : -1.5rem;
-
-        td {
-            &.empty, &.prev-line-number, &.new-line-number {
-                border-right: 1px solid #ddd;
-                text-align: center;
-            }
-
-            &.empty {
-                background-color: #ddd;
-            }
-
-            &.prev-line-number, &.new-line-number {
-                width: 4rem;
-            }
-
-            &.file-diff-block-summary {
-                color: #ccc;
-                background-color: #eee;
-                padding-left: .5rem;
-            }
-
-            &.code {
-                padding-left: .5rem;
-            }
-        }
-    }
 }
 
 /* Branches list */
@@ -160,9 +128,7 @@
             }
 
             &.behind {
-                border-left: .2rem solid #ddd;
                 text-align: left;
-                margin-left: -.4rem;
                 color : green;
 
                 .cursor {
@@ -171,12 +137,63 @@
                 }
             }
 
+            &.ahead.no-diff + .behind {
+                border-left: .2rem solid #ddd;
+            }
+
+            &.ahead:not(.no-diff) + .behind {
+                margin-left: -.4rem;
+            }
+
             .cursor {
                 border-width : .2rem;
                 border-style: solid;
                 height: 0;
                 display: inline-block;
             }
+
+            .value {
+                padding : .2rem;
+            }
         }
+    }
+}
+
+
+.file-diff {
+    font-family: monospace;
+    width: calc(~"100% + 3rem");
+    margin : -1.5rem;
+
+    td {
+        &.empty, &.prev-line-number, &.new-line-number {
+            border-right: 1px solid #ddd;
+            text-align: center;
+        }
+
+        &.empty {
+            background-color: #ddd;
+        }
+
+        &.prev-line-number, &.new-line-number {
+            width: 4rem;
+        }
+
+        &.file-diff-block-summary {
+            color: #ccc;
+            background-color: #eee;
+            padding-left: .5rem;
+        }
+
+        &.code {
+            padding-left: .5rem;
+        }
+    }
+}
+
+/* Merge requests list */
+#h-gitter-merge-requests-list {
+    .list {
+        margin-top: 3rem;
     }
 }

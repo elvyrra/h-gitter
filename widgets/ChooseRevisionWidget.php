@@ -58,7 +58,7 @@ class ChooseRevisionWidget extends Widget {
 
         $this->addJavaScript($this->getPlugin()->getJsUrl('choose-revision-widget.js'));
 
-        return View::make($this->getPlugin()->getView('choose-revision-widget.tpl'), array(
+        return View::make($this->getPlugin()->getView('widgets/choose-revision-widget.tpl'), array(
             'selectedLabel' => $selectedLabel,
             'options' => json_encode($options),
             'repoId' => $repo->id,

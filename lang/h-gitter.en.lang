@@ -95,11 +95,36 @@ choose-revision-widget-placeholder = "Type a branch or a tag"
 
 ; Branches list
 new-branch-btn = "Create branch"
-new-merge-request-btn = "New merge request"
+compare-branches-btn = "Compare"
 last-branch-update = "Updated on {date} by {user}"
 delete-branch-title = "Delete the branch"
+delete-branch-confirmation = "Are you sure you want to delete this branch ?"
 branch-merged = "Merged"
 branch-default = "Default"
 branch-diff-ahead = "{ahead} commits ahead {default}"
 branch-diff-behind = "{behind} commits behind {default}"
 branch-diff-ahead-behind = "{ahead} commits ahead, {behind} commits behind {default}"
+
+; New branch form
+new-branch-form-title = "New branch"
+new-branch-form-name-label = "Branch name"
+new-branch-form-from-label = "Based on"
+new-branch-form-submit-label = "Create branch"
+new-branch-form-name-already-exists = "This branch already exists"
+
+; Branches comparison
+branch-comparison-title = "Comparing : "
+
+; Merge requests list
+new-merge-request-btn = "New merge request"
+mr-list-opend-by = "Opened on {date} by {username}"
+merge-requests-list-edit-btn = "Edit"
+delete-merge-request-confirmation = "Do you really want to delete this merge request ?"
+
+; Merge request form
+merge-request-form-title = "Create / Edit a merge request"
+merge-request-form-title-label = "Title"
+merge-request-form-description-label = "Description"
+merge-request-form-from-label = "Merge branch"
+merge-request-form-to-label = "on "
+merge-request-same-branches-error = "You cannot merge a branch on the same branch."

@@ -245,8 +245,8 @@ class Git {
      * @param   string  branch name
      * @return  string
      */
-    public function createBranch($branch) {
-        return $this->run('branch ' . $branch);
+    public function createBranch($branch, $from) {
+        return $this->run('branch ' . $branch . ' ' . $from);
     }
 
     /**

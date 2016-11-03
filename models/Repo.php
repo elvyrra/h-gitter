@@ -268,7 +268,7 @@ class Repo extends Model {
         ));
 
         if($useCache) {
-            $cache->save();
+            $cache->addIfNotExists();
         }
 
         return $cache;

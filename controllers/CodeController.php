@@ -107,7 +107,7 @@ class CodeController extends Controller {
 
         $breadcrumb = $this->getBreadcrumb();
 
-        $content = View::make($this->getPlugin()->getView('repo-tree.tpl'), array (
+        $content = View::make($this->getPlugin()->getView('code/folder.tpl'), array (
             'list' => $list,
             'breadcrumb' => $breadcrumb
         ));
@@ -135,7 +135,7 @@ class CodeController extends Controller {
 
         $breadcrumb = $this->getBreadcrumb();
 
-        $content = View::make($this->getPlugin()->getView('repo-file.tpl'), array (
+        $content = View::make($this->getPlugin()->getView('code/file.tpl'), array (
             'basename' => basename($this->path),
             'breadcrumb' => $breadcrumb,
             'fileContent' => $fileContent,
