@@ -428,7 +428,7 @@ class Git {
      * @returns string
      */
     public function diff($branch1, $branch2) {
-        return $this->run('diff ' . $branch1 . ' ' . $branch2);
+        return $this->run('diff ' . $branch1 . ' ' . $branch2 . ' --');
     }
 
 

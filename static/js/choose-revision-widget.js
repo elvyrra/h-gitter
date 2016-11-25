@@ -20,7 +20,7 @@ require(['emv'], (EMV) => {
     model.choose = function(item) {
         if(item) {
             app.load(
-                app.getUri(app.tabset.activeTab().route(), {
+                app.getUri(app.tabset.activeTab.route, {
                     repoId : this.repoId,
                     type : item.type,
                     revision : item.value,

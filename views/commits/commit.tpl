@@ -12,12 +12,12 @@
     {/assign}
 
     {assign name="presentationContent"}
-        {if($commit->avatar)}
-            <img src="{{ $commit->avatar }}" class="commit-avatar small" />
-        {else}
-            {icon icon='user' class="commit-avatar default-avatar small" size="lg"}
-        {/if}
-        <span> {text key="h-gitter.commit-commited-by" author="{$commit->author}" date="{$commit->formattedDate}"}</span>
+        {widget plugin="h-widgets"
+                class="MetaData"
+                userId="{$commit->user->id}"
+                meta="{text key='h-gitter.commit-commited-by' author='{$commit->author}' date='{$commit->formattedDate}'}"
+                size="small"
+        }
 
         <div class="pull-right">
             <div>

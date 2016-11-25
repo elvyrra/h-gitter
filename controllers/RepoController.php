@@ -3,6 +3,10 @@
 namespace Hawk\Plugins\HGitter;
 
 class RepoController extends Controller {
+    /**
+     * Display the list of the repositories of the current project
+     * @return string The HTML response
+     */
     public function index() {
         $project = Project::getById($this->projectId);
 
@@ -78,15 +82,19 @@ class RepoController extends Controller {
         ));
     }
 
-
+    /**
+     * Create / Edit / Delete a repository
+     */
     public function edit() {
         if(empty($this->repoId)) {
             $repo = null;
             $projectId = App::request()->getParams('projectId');
+            $branches = array();
         }
         else {
             $repo = Repo::getById($this->repoId);
             $projectId = $repo->projectId;
+            $branches = $repo->getBranches();
         }
 
         $project = Project::getById($projectId);
@@ -178,6 +186,13 @@ class RepoController extends Controller {
                         'required' => true,
                         'maxlength' => 4096,
                         'label' => Lang::get($this->_plugin . '.edit-repo-description-label')
+                    )),
+
+                    new SelectInput(array(
+                        'name' => 'defaultBranch',
+                        'label' => Lang::get($this->_plugin . '.edit-repo-default-branch-label'),
+                        'options' => array_combine($branches, $branches),
+                        'notDisplayed' => !$this->repoId
                     ))
                 ),
 
@@ -305,12 +320,13 @@ class RepoController extends Controller {
                 'number' => count($repo->getTags()),
                 'url' => App::router()->getUri('h-gitter-repo-tags', array('repoId' => $repo->id))
             ),
-            'issues' => array(
+            'issues' => PLugin::get('h-tracker') ? array(
                 'icon' => 'bug',
                 'url' => App::router()->getUri('h-gitter-repo-issues', array('repoId' => $repo->id))
-            ),
+            ) : null,
             'merge-requests' => array(
                 'icon' => 'code-fork icon-flip-vertical',
+                'number' => count($repo->getOpenMergeRequests()),
                 'url' => App::router()->getUri('h-gitter-repo-merge-requests', array('repoId' => $repo->id))
             ),
             'settings' => array(
@@ -334,7 +350,7 @@ class RepoController extends Controller {
             }
 
             $sectionContent = Panel::make(array(
-                'type' => 'default',
+                'type' => 'info',
                 'title' => $filename,
                 'icon' => 'book',
                 'content' => $parser->text($readme)

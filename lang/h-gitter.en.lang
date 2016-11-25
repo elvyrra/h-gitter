@@ -48,6 +48,7 @@ edit-repo-existing-repo-label = "Create from an existing reporitory ?"
 edit-repo-name-label = "Repository name"
 edit-repo-path-label = "Repository absolute path"
 edit-repo-description-label = "Description"
+edit-repo-default-branch-label = "Default branch"
 edit-repo-privileges-legend = "Repository privileges"
 edit-repo-privivileges-username-label = "User"
 edit-repo-privivileges-master-label = "Master privileges on the repository ?"
@@ -117,14 +118,37 @@ branch-comparison-title = "Comparing : "
 
 ; Merge requests list
 new-merge-request-btn = "New merge request"
-mr-list-opend-by = "Opened on {date} by {username}"
+mr-list-opend-by = "Opened {date} by {username}"
 merge-requests-list-edit-btn = "Edit"
 delete-merge-request-confirmation = "Do you really want to delete this merge request ?"
 
 ; Merge request form
 merge-request-form-title = "Create / Edit a merge request"
 merge-request-form-title-label = "Title"
-merge-request-form-description-label = "Description"
+merge-request-form-description-label = "Description (Markdown is supported)"
 merge-request-form-from-label = "Merge branch"
 merge-request-form-to-label = "on "
-merge-request-same-branches-error = "You cannot merge a branch on the same branch."
+merge-request-branches-error = "This branch cannot be merged on the branch '{to}'"
+
+; Merge request page
+merge-request-intro = "Request to merge {source} into {to}"
+merge-request-opened-label = "Opened {date} by {username}"
+merge-request-delete-btn = "Close the merge request"
+merge-request-accept-btn = "Accept merge request"
+merge-request-delete-source-branch-label = "Remove source branch"
+merge-request-is-wip = "This merge request is currently a Work in progress, it cannot be merged."
+merge-request-has-conflicts = "This merge request has conflicts, it cannot be merged. Resolve the conflicts on the branch {source} and push it again."
+merge-request-discussions-tab-title = "Discussion"
+merge-request-diff-tab-title = "Changes"
+discussion-response-btn = "Respond"
+discussion-new-btn = "New comment"
+discussion-opened = "Opened by {username} {ago}"
+remove-comment-title = "Remove the comment"
+
+; comment form
+comment-form-comment-placeholder = "Write your comment. Markdown is supported"
+comment-form-submit-btn = "Comment"
+score-comment = "{username} scored {score}"
+
+; Issues list
+issue-new-btn = "New issue"

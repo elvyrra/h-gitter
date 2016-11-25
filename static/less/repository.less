@@ -31,6 +31,11 @@
     .commits-list {
         margin-top: 3rem;
 
+        .meta-data {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
         .commit-btn {
             width: 7.4rem;
         }
@@ -38,28 +43,6 @@
     }
 }
 
-.commit-avatar {
-    @dimension: 5rem;
-
-    width: @dimension;
-    height: @dimension;
-    line-height: @dimension;
-    border-radius: 100%;
-
-    &.default-avatar {
-        background-color: #333;
-        color: #ddd;
-        text-align: center;
-    }
-
-    &.small {
-        @dimension: 2rem;
-
-        width: @dimension;
-        height: @dimension;
-        line-height: @dimension;
-    }
-}
 
 #choose-revision-content {
     position: absolute;
@@ -161,9 +144,12 @@
 
 
 .file-diff {
-    font-family: monospace;
     width: calc(~"100% + 3rem");
     margin : -1.5rem;
+
+    tr:not(.merge-request-diff-comment) {
+        font-family: monospace;
+    }
 
     td {
         &.empty, &.prev-line-number, &.new-line-number {
@@ -188,6 +174,10 @@
         &.code {
             padding-left: .5rem;
         }
+
+        .ace_cursor-layer {
+            display: none;
+        }
     }
 }
 
@@ -195,5 +185,60 @@
 #h-gitter-merge-requests-list {
     .list {
         margin-top: 3rem;
+    }
+}
+
+/* Merge request page */
+#h-gitter-merge-request {
+    input.new-comment-input {
+        width: 100%;
+    }
+
+    .h-gitter-merge-request-comment-form {
+        .form-input-wrap-comment {
+            width: 100%;
+        }
+    }
+
+    .merge-request-score {
+        margin-bottom: 2rem;
+    }
+
+    .file-diff {
+        .prev-line-number {
+            position: relative;
+
+            .open-comment-form {
+                position: absolute;
+                opacity: 0;
+                transition: opacity .2s;
+                color: inherit;
+                left: -1rem;
+                top: 0;
+            }
+        }
+
+        tr:hover .open-comment-form{
+            opacity: 1;
+        }
+
+        .merge-request-diff-comment > td {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+
+        }
+    }
+}
+
+#h-gitter-issues-list {
+    .list-search-input [data-field="id"] {
+        max-width: 10rem;
+    }
+
+    .list-column-title[data-field="projectId"],
+    .list-cell[data-field="projectId"] {
+        display: none;
     }
 }

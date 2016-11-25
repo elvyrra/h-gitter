@@ -9,17 +9,12 @@
                 <table class="table table-hover">
                     {foreach($commits as $commit)}
                         <tr>
-                            <td class="col-xs-1">
-                                {if($commit->avatar)}
-                                    <img src="{{ $commit->avatar }}" class="commit-avatar" />
-                                {else}
-                                    {icon icon='user' class="commit-avatar default-avatar" size="3x"}
-                                {/if}
-                            </td>
-                            </td>
-                            <td class="col-xs-8">
-                                <div class="commit-message bold lead">{{ $commit->message }}</div>
-                                <div>{text key="h-gitter.repo-commits-time-and-author" author="{$commit->author}" time="{$commit->time}"}</div>
+                            <td class="col-xs-9">
+                                {widget plugin="h-widgets"
+                                        class="MetaData"
+                                        userId="{$commit->user->id}"
+                                        meta="{$commit->message}"
+                                        description="{text key='h-gitter.repo-commits-time-and-author' author='{$commit->author}' time='{$commit->time}'}"}
                             </td>
                             <td class="col-xs-3">
                                 <a href="{uri action='h-gitter-repo-commit' repoId='{$repo->id}' commit='{$commit->hash}'}" class="btn btn-primary commit-btn">

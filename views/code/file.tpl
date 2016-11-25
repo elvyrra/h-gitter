@@ -23,15 +23,13 @@
         <div id="h-gitter-file-content-ace" e-ace="{language : '{{ $extension }}', readonly: true, value : content, maxLines : Infinity }"></div>
     {/assign}
 
-    {panel type="default" icon="file-o" title="{$basename}" content="{$content}"}
+    {panel type="info" icon="file-o" title="{$basename}" content="{$content}"}
 </div>
 
 <script type="text/javascript">
     require(['jquery', 'emv'], ($, EMV) => {
         const model = new EMV({
-            data : {
-                content : $('#h-gitter-file-content').val()
-            }
+            content : $('#h-gitter-file-content').val()
         });
 
         model.$apply(document.getElementById('h-gitter-file-content-ace'));

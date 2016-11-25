@@ -99,7 +99,7 @@ class CodeController extends Controller {
 
                 'date' => array(
                     'display' => function($value) {
-                        return date(Lang::get('main.time-format'), $value);
+                        return Utils::timeAgo($value);
                     }
                 )
             )
@@ -153,7 +153,7 @@ class CodeController extends Controller {
      * @param   string $file The file to analyse
      * @returns string        An array containing the icon and the language of the file
      */
-    private function getFileAceLanguage($file) {
+    public function getFileAceLanguage($file) {
         // Get all available ace languages
         $modes = glob(Plugin::get('main')->getPublicJsDir() . 'ext/ace/mode-*.js');
 

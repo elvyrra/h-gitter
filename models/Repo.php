@@ -274,7 +274,12 @@ class Repo extends Model {
         return $cache;
     }
 
-
+    /**
+     * Get the differences between two revisions, and return the diff in a structured array
+     * @param  string $old The old revision
+     * @param  string $new The new revision
+     * @return array       The structured difference
+     */
     public function getDiff($old, $new) {
         // Get the raw difference
         $rawDiff = $this->diff($old, $new);
@@ -313,7 +318,8 @@ class Repo extends Model {
                 'differences' => array(),
                 'type' => $type,
                 'additions' => 0,
-                'deletions' => 0
+                'deletions' => 0,
+                'extension' => CodeController::getInstance()->getFileAceLanguage($filename)
             );
 
             // Get all the differences block in the file
@@ -332,6 +338,7 @@ class Repo extends Model {
 
                 $lines = array_slice(explode(PHP_EOL, $subBlocks[$i + 1]), 1, -1);
                 $details = array();
+
 
                 foreach($lines as $line) {
                     $detailsLine = array(
@@ -377,7 +384,53 @@ class Repo extends Model {
         return $result;
     }
 
+
+    /**
+     * Magic function to call Git lib method
+     * @param  string $name      The called method
+     * @param  array $arguments  The called arguments
+     * @return mixed
+     */
     public function __call($name, $arguments) {
         return call_user_func_array(array($this->getGitRepo(), $name), $arguments);
+    }
+
+    /**
+     * Get the repository merge requests
+     * @return array The list of the repository merge requests
+     */
+    public function getMergeRequests() {
+        return MergeRequest::getListByExample(new DBExample(array(
+            'repoId' => $this->id
+        )));
+    }
+
+
+    /**
+     * Get the open merge requests
+     * @return array The open merge requests
+     */
+    public function getOpenMergeRequests() {
+        return MergeRequest::getListByExample(new DBExample(array(
+            'repoId' => $this->id,
+            'merged' => 0
+        )));
+    }
+
+
+    /**
+     *  Check if a branch can be merged on another one
+     */
+    public function canMerge($from, $to) {
+        if($from === $to) {
+            return false;
+        }
+        $behind = (int) trim($this->run('rev-list ' . $to . '..' . $from . ' --count --no-merges'));
+
+        if(!$behind) {
+            return false;
+        }
+
+        return true;
     }
 }

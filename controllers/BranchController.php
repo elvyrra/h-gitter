@@ -48,7 +48,7 @@ class BranchController extends Controller {
                 'behind' => $behind,
                 'merged' => $ahead == 0 && $behind == 0,
                 'time' => $info->date,
-                'date' => date(Lang::get('main.time-format'), (int) $info->date),
+                'date' => Utils::timeAgo((int) $info->date),
                 'author' => $info->author,
                 'user' => $info->user,
                 'diffTitle' => $diffTitle
@@ -102,7 +102,17 @@ class BranchController extends Controller {
                                 $result .= new ButtonInput(array(
                                     'icon' => 'code-fork icon-flip-vertical',
                                     'class' => 'pull-right',
-                                    'label' => Lang::get($this->_plugin . '.new-merge-request-btn')
+                                    'label' => Lang::get($this->_plugin . '.new-merge-request-btn'),
+                                    'href' => App::router()->getUri(
+                                        'h-gitter-repo-merge-request',
+                                        array(
+                                            'repoId' => $this->repoId,
+                                            'mergeRequestId' => 0
+                                        ),
+                                        array(
+                                            'branch' => $branch->name
+                                        )
+                                    )
                                 ));
                             }
                         }
@@ -166,7 +176,7 @@ class BranchController extends Controller {
                     'value' => Lang::get($this->_plugin . '.new-branch-form-submit-label')
                 ))
             ),
-            'onsuccess' => 'app.lists["h-gitter-repo-branches-list"].refresh();'
+            'onsuccess' => 'app.tabset.activeTab.reload();'
         ));
 
         switch($form->submitted()) {

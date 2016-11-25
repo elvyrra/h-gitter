@@ -18,6 +18,12 @@ class Installer extends PluginInstaller{
 
         Repo::createTable();
 
+        CommitCache::createTable();
+
+        MergeRequest::createTable();
+
+        MergeRequestComment::createTable();
+
         // Create permissions
         Permission::add($this->_plugin . '.access-plugin', 1, 0);
         Permission::add($this->_plugin . '.create-projects', 0, 0);
@@ -27,8 +33,10 @@ class Installer extends PluginInstaller{
      * Uninstall the plugin. This method is called on plugin uninstallation, after it has been removed from the database
      */
     public function uninstall(){
+        MergeRequestComment::dropTable();
+        MergeRequest::dropTable();
+        CommitCache::dropTable();
         Repo::dropTable();
-
         Project::dropTable();
     }
 

@@ -15,8 +15,21 @@ class MergeRequestController extends Controller {
             'navigation' => false,
             'noHeader' => true,
             'model' => 'MergeRequest',
+            'controls' => array(
+                array(
+                    'icon' => 'plus',
+                    'class' => 'btn-primary',
+                    'label' => Lang::get($this->_plugin . '.new-merge-request-btn'),
+                    'href' => App::router()->getUri('h-gitter-repo-merge-request', array(
+                        'repoId' => $this->repoId,
+                        'mergeRequestId' => 0
+                    )),
+                    'target' => 'dialog'
+                )
+            ),
             'filter' => new DBExample(array(
-                'repoId' => $this->repoId
+                'repoId' => $this->repoId,
+                'merged' => 0
             )),
             'sorts' => array(
                 'ctime' => DB::SORT_DESC
@@ -39,7 +52,7 @@ class MergeRequestController extends Controller {
                         return View::make($this->getPlugin()->getView('merge-requests/list-name-cell.tpl'), array(
                             'repo' => $repo,
                             'mr' => $mr,
-                            'date' => date(Lang::get('main.time-format'), $mr->ctime),
+                            'date' => Utils::timeAgo($mr->ctime),
                             'username' => User::getById($mr->userId)->username
                         ));
                     }
@@ -62,18 +75,11 @@ class MergeRequestController extends Controller {
             )
         ));
 
+        $content = $list->display();
 
         if($list->isRefreshing()) {
-            return $list->display();
+            return $content;
         }
-
-        $this->mergeRequestId = 0;
-
-        $content = View::make($this->getPlugin()->getView('merge-requests/list.tpl'), array(
-            'list' => $list,
-            'form' => $this->edit(),
-            'open' => App::request()->getParams('branch')
-        ));
 
         $this->addKeysToJavaScript($this->_plugin . '.delete-merge-request-confirmation');
 
@@ -127,91 +133,120 @@ class MergeRequestController extends Controller {
                 'repoId' => $this->repoId,
                 'mergeRequestId' => $this->mergeRequestId
             )),
-            'inputs' => array(
-                new HiddenInput(array(
-                    'name' => 'repoId',
-                    'value' => $this->repoId
-                )),
+            'fieldsets' => array(
+                'form' => array(
+                    new HiddenInput(array(
+                        'name' => 'repoId',
+                        'value' => $this->repoId
+                    )),
 
-                new TextInput(array(
-                    'name' => 'title',
-                    'default' => $title,
-                    'required' => $this->mergeRequestId,
-                    'label' => Lang::get($this->_plugin . '.merge-request-form-title-label'),
-                    'attributes' => array(
-                        'e-value' => 'title'
-                    )
-                )),
+                    new SelectInput(array(
+                        'name' => 'from',
+                        'required' => true,
+                        'label' => Lang::get($this->_plugin . '.merge-request-form-from-label'),
+                        'default' => $branch ? $branch : '',
+                        'invitation' => ' - ',
+                        'options' => $branches,
+                        'attributes' => array(
+                            'e-value' => 'sourceBranch'
+                        )
+                    )),
 
-                new SelectInput(array(
-                    'name' => 'from',
-                    'required' => true,
-                    'label' => Lang::get($this->_plugin . '.merge-request-form-from-label'),
-                    'default' => $branch ? $branch : '',
-                    'invitation' => ' - ',
-                    'options' => $branches,
-                    'attributes' => array(
-                        'e-value' => 'sourceBranch'
-                    )
-                )),
+                    new SelectInput(array(
+                        'name' => 'to',
+                        'required' => true,
+                        'nl' => false,
+                        'labelWidth' => 'auto',
+                        'invitation' => ' - ',
+                        'default' => $repo->defaultBranch,
+                        'label' => Lang::get($this->_plugin . '.merge-request-form-to-label'),
+                        'options' => $branches,
+                        'attributes' => array(
+                            'e-value' => 'toBranch'
+                        )
+                    )),
 
-                new SelectInput(array(
-                    'name' => 'to',
-                    'required' => true,
-                    'nl' => false,
-                    'labelWidth' => 'auto',
-                    'invitation' => ' - ',
-                    'default' => $repo->defaultBranch,
-                    'label' => Lang::get($this->_plugin . '.merge-request-form-to-label'),
-                    'options' => $branches,
-                    'attributes' => array(
-                        'e-value' => 'toBranch'
-                    )
-                )),
+                    new TextInput(array(
+                        'name' => 'title',
+                        'default' => $title,
+                        'required' => $this->mergeRequestId,
+                        'label' => Lang::get($this->_plugin . '.merge-request-form-title-label'),
+                        'attributes' => array(
+                            'e-value' => 'title'
+                        )
+                    )),
 
-                new SubmitInput(array(
-                    'name' => 'valid',
-                    'value' => Lang::get('main.valid-button'),
-                    'attributes' => array(
-                        'e-disabled' => '!valid'
-                    )
-                )),
+                    new TextareaInput(array(
+                        'name' => 'description',
+                        'label' => Lang::get($this->_plugin . '.merge-request-form-description-label')
+                    ))
+                ),
 
-                new ButtonInput(array(
-                    'name' => 'cancel',
-                    'value' => Lang::get('main.cancel-button'),
-                    'notDisplayed' => !$this->mergeRequestId,
-                ))
+                'submits' => array(
+                    new SubmitInput(array(
+                        'name' => 'valid',
+                        'value' => Lang::get('main.valid-button'),
+                        'attributes' => array(
+                            'e-disabled' => '!available'
+                        )
+                    )),
+
+                    new ButtonInput(array(
+                        'name' => 'cancel',
+                        'value' => Lang::get('main.cancel-button'),
+                        'onclick' => 'app.dialog("close")'
+                    ))
+                ),
             ),
-            'onsuccess' => 'app.load(app.getUri("h-gitter-repo-display-merge-request", {
-                repoId : ' . $this->repoId . ',
-                mergeRequestId : data.primary
-            }));'
+            'onsuccess' => '
+                app.dialog("close");
+                app.load(app.getUri("h-gitter-repo-display-merge-request", {
+                    repoId : ' . $this->repoId . ',
+                    mergeRequestId : data.primary
+                }));'
         ));
 
         if(!$form->submitted()) {
-            // $this->addJavaScript($this->getPlugin()->getJsUrl('merge-request-form.js'));
+            $this->addJavaScript($this->getPlugin()->getJsUrl('merge-request-form.js'));
 
-            return $form;
+            return Dialogbox::make(array(
+                'title' => Lang::get($this->_plugin . '.merge-request-form-title'),
+                'icon' => 'code-fork icon-flip-horizontal',
+                'page' => $form->display()
+            ));
         }
 
         if($form->check()) {
-
-            if($form->getData('from') === $form->getData('to')) {
-                $form->error('from', Lang::get($this->_plugin . '.merge-request-same-branches-error'));
+            if(!$repo->canMerge($form->getData('from'), $form->getData('to'))) {
+                $form->error('from', Lang::get($this->_plugin . '.merge-request-branches-error', array('to' => $this->getData('to'))));
 
                 return $form->response(Form::STATUS_CHECK_ERROR);
             }
 
-            if(!$this->mergeRequestId) {
-                $commit = $repo->getCommitInformation($form->getData('from'), false);
-
-                $form->setData(array(
-                    'title' => $commit->message
-                ));
-            }
             return $form->register();
         }
+    }
+
+    /**
+     * Check the availability to merge two branches, and returns the title of the merge request
+     * @return array An array contaning two keys : 'available' and 'title'
+     */
+    public function availabability() {
+        $repo = Repo::getById($this->repoId);
+        App::response()->setContentType('json');
+
+        $canMerge = $repo->canMerge($this->from, $this->to);
+        $title = '';
+
+        if($canMerge) {
+            $commit = $repo->getCommitInformation($this->from, false);
+            $title = $commit->message;
+        }
+
+        return array(
+            'available' => $canMerge,
+            'title' => $title
+        );
     }
 
 
@@ -219,5 +254,225 @@ class MergeRequestController extends Controller {
      * Display a merge request
      * @returns string The HTML Response
      */
-    public function display() {}
+    public function display() {
+        MergeRequest::updateTable();
+        $repo = Repo::getById($this->repoId);
+        $mr = MergeRequest::getByExample(new DBExample(array(
+            'id' => $this->mergeRequestId,
+            'repoId' => $this->repoId
+        )));
+
+        if(!$mr) {
+            throw new PageNotFoundException('', array(
+                'resource' => 'merge-request',
+                'id' => $this->mergeRequestId
+            ));
+        }
+
+        $parser = new Parsedown();
+
+        $mr->description = $parser->text($mr->description);
+
+        $author = User::getById($mr->userId);
+
+        $mr->formattedDate = Utils::timeAgo($mr->ctime);
+
+        $commit = $repo->getCommitInformation($mr->from, false);
+        $diff = $repo->getDiff($mr->to, $mr->from);
+
+        $acceptForm = $this->accept();
+
+        switch (App::request()->getParams('section')) {
+            case 'diff':
+                $discussionsTab = array(
+                    'content' => '',
+                    'href' => App::router()->getUri(
+                        'h-gitter-repo-display-merge-request',
+                        array(
+                            'repoId' => $this->repoId,
+                            'mergeRequestId' => $this->mergeRequestId
+                        ),
+                        array(
+                            'section' => 'disucssions'
+                        )
+                    )
+                );
+
+                $diffTab = array(
+                    'href' => '',
+                    'content' => View::make($this->getPlugin()->getView('merge-requests/diff.tpl'), array(
+                        'commit' => $commit,
+                        'repo' => $repo,
+                        'mr' => $mr,
+                        'diff' => $diff
+                    ))
+                );
+
+                break;
+
+            default:
+                $commentController = MergeRequestCommentController::getInstance(array(
+                    'repoId' => $this->repoId,
+                    'mergeRequestId' => $this->mergeRequestId,
+                    'commentId' => 0
+                ));
+                $discussionsTab = array(
+                    'content' => View::make($this->getPlugin()->getView('merge-requests/discussions.tpl'), array(
+                        'commentController' => $commentController
+                    )),
+                    'href' => ''
+                );
+
+                $diffTab = array(
+                    'href' => App::router()->getUri(
+                        'h-gitter-repo-display-merge-request',
+                        array(
+                            'repoId' => $this->repoId,
+                            'mergeRequestId' => $this->mergeRequestId
+                        ),
+                        array(
+                            'section' => 'diff'
+                        )
+                    ),
+                    'content' => ''
+                );
+                break;
+        }
+
+        $discussionsTab['title'] = Lang::get($this->_plugin . '.merge-request-discussions-tab-title');
+        $diffTab['title'] = Lang::get($this->_plugin . '.merge-request-diff-tab-title') . ' <span class="badge">' . count($diff['differences']) . '</span>';
+
+        // Get merge request discussion
+        $comments = $mr->getComments();
+
+        // Build the merge request particpants
+        $participants = array_map(function($participant) {
+            $user = User::getById($participant);
+
+            return array(
+                'id' => $participant,
+                'username' => $user->username,
+                'avatar' => $user->getProfileData('avatar')
+            );
+        }, $mr->participants);
+
+
+        $this->addJavaScript($this->getPlugin()->getJsUrl('merge-request.js'));
+
+        $content = View::make($this->getPlugin()->getView('merge-requests/merge-request.tpl'), array(
+            'repo' => $repo,
+            'mr' => $mr,
+            'author' => $author,
+            'acceptForm' => $acceptForm,
+            'tabs' => array(
+                'dicussions' => $discussionsTab,
+                'diff' => $diffTab
+            ),
+            'comments' => json_encode($comments, JSON_NUMERIC_CHECK),
+            'participants' => json_encode($participants, JSON_NUMERIC_CHECK),
+        ));
+
+        return RepoController::getInstance(array(
+            'repoId' => $this->repoId
+        ))->display('merge-requests', $content);
+    }
+
+
+
+    /**
+     * Accept a merge request
+     */
+    public function accept() {
+        $mr = MergeRequest::getByExample(new DBExample(array(
+            'id' => $this->mergeRequestId,
+            'repoId' => $this->repoId
+        )));
+
+        if(!$mr) {
+            throw new PageNotFoundException('', array(
+                'resource' => 'merge-request',
+                'id' => $this->mergeRequestId
+            ));
+        }
+
+        $form = new Form(array(
+            'id' => 'accept-merge-request-form',
+            'action' => App::router()->getUri('h-gitter-accept-merge-request', array(
+                'repoId' => $this->repoId,
+                'mergeRequestId' => $this->mergeRequestId
+            )),
+            'class' => 'form-inline',
+            'inputs' => array(
+                new SubmitInput(array(
+                    'name' => 'valid',
+                    'icon' => 'check',
+                    'nl' => false,
+                    'value' => Lang::get($this->_plugin . '.merge-request-accept-btn'),
+                    'notDisplayed' => !$mr->isAcceptable(),
+                    'class' => 'pull-left'
+                )),
+                new CheckboxInput(array(
+                    'name' => 'removeSourceBranch',
+                    'nl' => false,
+                    'label' => Lang::get($this->_plugin . '.merge-request-delete-source-branch-label'),
+                    'notDisplayed' => !$mr->isAcceptable(),
+                    'labelWidth' => 'auto'
+                )),
+            ),
+            'onsuccess' => 'app.load(app.getUri("h-gitter-repo-merge-requests", {repoId : ' . $this->repoId . '}));'
+        ));
+
+        if(!$form->submitted()) {
+            return $form->display();
+        }
+
+        if(!$mr->isAcceptable()) {
+            throw new ForbiddenException('This merge request is not acceptable');
+        }
+
+        // Merge the source branch
+        $repo = Repo::getById($this->repoId);
+
+        $repo->checkout($mr->to);
+        $repo->merge($mr->from);
+
+        if($form->getData('removeSourceBranch')) {
+            $repo->deleteBranch($mr->from, true);
+        }
+
+        $mr->merged = 1;
+        $mr->save();
+
+        return $form->response(Form::STATUS_SUCCESS);
+    }
+
+
+    public function score() {
+        App::response()->setContentType('json');
+
+        $mr = MergeRequest::getByExample(new DBExample(array(
+            'id' => $this->mergeRequestId,
+            'repoId' => $this->repoId
+        )));
+
+        $scores = json_decode($mr->scores, true);
+
+        if(!empty($scores[App::session()->getUser()->id]) && $scores[App::session()->getUser()->id] === $this->score) {
+            unset($scores[App::session()->getUser()->id]);
+        }
+        else {
+            $scores[App::session()->getUser()->id] = $this->score;
+        }
+
+        $mr->scores = json_encode($scores);
+
+        $mr->save();
+
+        $mr->addComment(Lang::get($this->_plugin . '.score-comment', array(
+            'username' => App::session()->getUser()->username,
+            'score' => $this->score
+        )));
+
+        return $scores;
+    }
 }
