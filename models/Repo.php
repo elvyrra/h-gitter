@@ -171,6 +171,8 @@ class Repo extends Model {
     public function prepareDatabaseData() {
         $insert = parent::prepareDatabaseData();
 
+        $insert['masters'] = json_encode($this->decodedMasters);
+
         $insert['mtime'] = time();
 
         return $insert;
@@ -341,14 +343,13 @@ class Repo extends Model {
 
 
                 foreach($lines as $line) {
-                    $detailsLine = array(
-                        'code' => $line
-                    );
+                    $detailsLine = array();
 
                     if(substr($line, 0, 1) === '+') {
                         $detailsLine['rightLineNumber'] = $rightFirstLine + $rightOffset;
                         $detailsLine['leftLineNumber'] = '';
                         $detailsLine['type'] = 'addition';
+                        $detailsLine['code'] = substr($line, 0, 1) . substr($line, 2);
                         $rightOffset++;
                         $result['differences'][$filename]['additions'] ++;
                     }
@@ -356,6 +357,7 @@ class Repo extends Model {
                         $detailsLine['leftLineNumber'] = $leftFirstLine + $leftOffset;
                         $detailsLine['rightLineNumber'] = '';
                         $detailsLine['type'] = 'deletion';
+                        $detailsLine['code'] = substr($line, 0, 1) . substr($line, 2);
                         $leftOffset++;
                         $result['differences'][$filename]['deletions'] ++;
                     }
@@ -363,6 +365,7 @@ class Repo extends Model {
                         $detailsLine['rightLineNumber'] = $rightFirstLine + $rightOffset;
                         $detailsLine['leftLineNumber'] = $leftFirstLine + $leftOffset;
                         $detailsLine['type'] = '';
+                        $detailsLine['code'] = substr($line, 1);
                         $rightOffset++;
                         $leftOffset++;
                     }

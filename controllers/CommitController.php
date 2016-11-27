@@ -61,6 +61,8 @@ class CommitController extends Controller {
 
         $diff = $repo->getDiff($commit->parent ? $commit->hash . '^1' : '', $commit->hash);
 
+        $this->addJavaScript($this->getPlugin()->getJsUrl('commit-diff.js'));
+
         $content = View::make($this->getPlugin()->getView('commits/commit.tpl'), array(
             'repo' => $repo,
             'commit' => $commit,

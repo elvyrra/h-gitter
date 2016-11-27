@@ -151,6 +151,18 @@
         font-family: monospace;
     }
 
+    tr.addition {
+        .ace_layer.ace_text-layer {
+            background-color: #355435;
+        }
+    }
+
+    tr.deletion {
+        .ace_layer.ace_text-layer {
+            background-color: #734a4a;
+        }
+    }
+
     td {
         &.empty, &.prev-line-number, &.new-line-number {
             border-right: 1px solid #ddd;
@@ -173,6 +185,10 @@
 
         &.code {
             padding-left: .5rem;
+
+            .ace_gutter {
+                display: none;
+            }
         }
 
         .ace_cursor-layer {
@@ -204,6 +220,17 @@
         margin-bottom: 2rem;
     }
 
+    .discussions {
+        .discussion-comment {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .new-comment-input,
+        .h-widgets-comment-form {
+            margin-top: 1.5rem;
+        }
+    }
+
     .file-diff {
         .prev-line-number {
             position: relative;
@@ -217,6 +244,8 @@
                 top: 0;
             }
         }
+
+
 
         tr:hover .open-comment-form{
             opacity: 1;

@@ -116,7 +116,7 @@ class RepoController extends Controller {
 
         $masters = $repo ? $repo->decodedMasters : array();
         foreach($users as $user) {
-            if($project->isUserMaster($user)) {
+            if($repo->isUserMaster($user)) {
                 $masters[] = $user->id;
             }
         }
@@ -228,7 +228,6 @@ class RepoController extends Controller {
 
         if(!$form->submitted()) {
             $this->addJavaScript($this->getPlugin()->getJsUrl('edit-repo.js'));
-            $this->addCss($this->getPlugin()->getCssUrl('edit-repo.less'));
 
             return Dialogbox::make(array(
                 'title' => Lang::get($this->_plugin . '.edit-repo-title'),
@@ -279,12 +278,15 @@ class RepoController extends Controller {
                     }
                 }
 
+
                 // Save the repository object in the database
                 $repo->save();
 
                 return $form->response(Form::STATUS_SUCCESS);
             }
             else {
+                $form->object->decodedMasters = array_keys(App::request()->getBody('masters'));
+
                 return $form->register();
             }
         }

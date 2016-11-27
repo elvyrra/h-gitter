@@ -92,6 +92,8 @@ class MergeRequestController extends Controller {
      * Create / Edit / Delete a merge request
      */
     public function edit() {
+        $repo = Repo::getById($this->repoId);
+
         if(App::request()->getMethod() === 'delete') {
             // Delete the merge request
             $mr = MergeRequest::getById($this->mergeRequestId);
@@ -105,12 +107,30 @@ class MergeRequestController extends Controller {
 
             $mr->delete();
 
+            $subject = Lang::get($this->_plugin . '.merge-request-deleted-subject', array(
+                'repo' => $repo->name,
+                'id' => $form->object->id
+            ));
+            $content = View::make($this->getPLugin()->getView('notifications/merge-request-deleted.tpl'), array(
+                'author' => User::getById($mr->userId)->username,
+                'mrId' => $mr->id
+            ));
+
+            $recipients = $mr->getParticipants();
+
+            $email = new Mail();
+            $email  ->subject($subject)
+                    ->content($content)
+                    ->to(array_map(function($user) {
+                        return $user->email;
+                    }, $recipients))
+                    ->send();
+
             App::response()->setStatus(204);
 
             return;
         }
 
-        $repo = Repo::getById($this->repoId);
 
         $branch = App::request()->getParams('branch');
 
@@ -176,9 +196,10 @@ class MergeRequestController extends Controller {
                         )
                     )),
 
-                    new TextareaInput(array(
+                    new \Hawk\Plugins\HWidgets\MarkdownInput(array(
                         'name' => 'description',
-                        'label' => Lang::get($this->_plugin . '.merge-request-form-description-label')
+                        'label' => Lang::get($this->_plugin . '.merge-request-form-description-label'),
+                        'labelWidth' => 'auto',
                     ))
                 ),
 
@@ -223,7 +244,51 @@ class MergeRequestController extends Controller {
                 return $form->response(Form::STATUS_CHECK_ERROR);
             }
 
-            return $form->register();
+            // Register the merge request data
+            $form->register(false);
+
+            // Send an email notification to the repository participants
+            $mr = $form->object;
+            if($form->new) {
+                $subject = Lang::get($this->_plugin . '.new-merge-request-subject', array(
+                    'repo' => $repo->name,
+                    'id' => $mr->id
+                ));
+                $content = View::make($this->getPLugin()->getView('notifications/new-merge-request.tpl'), array(
+                    'author' => User::getById($mr->userId)->username,
+                    'project' => Project::getById($repo->projectId)->name,
+                    'repo' => $repo->name,
+                    'title' => $mr->title,
+                    'repoId' => $repo->id,
+                    'mrId' => $mr->id
+                ));
+
+                $recipients = $repo->getUsers();
+            }
+            else {
+                $subject = Lang::get($this->_plugin . '.merge-request-modification-subject', array(
+                    'repo' => $repo->name,
+                    'id' => $form->object->id
+                ));
+                $content = View::make($this->getPLugin()->getView('notifications/merge-request-modification.tpl'), array(
+                    'author' => User::getById($mr->userId)->username,
+                    'title' => $mr->title,
+                    'repoId' => $repo->id,
+                    'mrId' => $mr->id
+                ));
+
+                $recipients = $mr->getParticipants();
+            }
+
+            $email = new Mail();
+            $email  ->subject($subject)
+                    ->content($content)
+                    ->to(array_map(function($user) {
+                        return $user->email;
+                    }, $recipients))
+                    ->send();
+
+            return $form->response(Form::STATUS_SUCCESS);
         }
     }
 
@@ -318,7 +383,8 @@ class MergeRequestController extends Controller {
                 ));
                 $discussionsTab = array(
                     'content' => View::make($this->getPlugin()->getView('merge-requests/discussions.tpl'), array(
-                        'commentController' => $commentController
+                        'repoId' => $this->repoId,
+                        'mergeRequestId' => $this->mergeRequestId
                     )),
                     'href' => ''
                 );
@@ -383,6 +449,7 @@ class MergeRequestController extends Controller {
      * Accept a merge request
      */
     public function accept() {
+        $repo = Repo::getById($this->repoId);
         $mr = MergeRequest::getByExample(new DBExample(array(
             'id' => $this->mergeRequestId,
             'repoId' => $this->repoId
@@ -422,8 +489,12 @@ class MergeRequestController extends Controller {
             'onsuccess' => 'app.load(app.getUri("h-gitter-repo-merge-requests", {repoId : ' . $this->repoId . '}));'
         ));
 
-        if(!$form->submitted()) {
+        if(!$form->submitted() && $repo->isUserMaster()) {
             return $form->display();
+        }
+
+        if(!$repo->isUserMaster()) {
+            throw new ForbiddenException('You don\'t have necessary privileges to merge this request');
         }
 
         if(!$mr->isAcceptable()) {
@@ -431,7 +502,7 @@ class MergeRequestController extends Controller {
         }
 
         // Merge the source branch
-        $repo = Repo::getById($this->repoId);
+
 
         $repo->checkout($mr->to);
         $repo->merge($mr->from);
@@ -442,6 +513,26 @@ class MergeRequestController extends Controller {
 
         $mr->merged = 1;
         $mr->save();
+
+        // Send the notification to all of mr participants
+        $subject = Lang::get($this->_plugin . '.merge-request-accepted-subject', array(
+            'repo' => $repo->name,
+            'id' => $form->object->id
+        ));
+        $content = View::make($this->getPLugin()->getView('notifications/merge-request-accepted.tpl'), array(
+            'author' => User::getById($mr->userId)->username,
+            'mrId' => $mr->id
+        ));
+
+        $recipients = $mr->getParticipants();
+
+        $email = new Mail();
+        $email  ->subject($subject)
+                ->content($content)
+                ->to(array_map(function($user) {
+                    return $user->email;
+                }, $recipients))
+                ->send();
 
         return $form->response(Form::STATUS_SUCCESS);
     }

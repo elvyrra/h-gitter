@@ -242,4 +242,17 @@ class MergeRequest extends Model{
 
         $comment->save();
     }
+
+
+    /**
+     * Get the users that participate to this merge request
+     * @return array The merge request participants
+     */
+    public function getParticipants() {
+        return User::getListByExample(new DBExample(array(
+            'id' => array(
+                '$in' => $this->participants
+            )
+        )));
+    }
 }

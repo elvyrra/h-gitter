@@ -7,113 +7,92 @@ class MergeRequestCommentController extends Controller {
      * Create / Edit / remove a comment
      */
     public function edit() {
-        if(App::request()->getMethod() === 'delete') {
-            // Remove the comment
-            $comment = MergeRequestComment::getByExample(new DBExample(array(
-                'id' => $this->commentId,
-                'mergeRequestId' => $this->mergeRequestId,
-            )));
+        switch(App::request()->getMethod()) {
+            case 'delete' :
+                // Remove the comment
+                $comment = MergeRequestComment::getByExample(new DBExample(array(
+                    'id' => $this->commentId,
+                    'mergeRequestId' => $this->mergeRequestId,
+                )));
 
-            if(!$comment) {
-                throw new PageNotFoundException('', array(
-                    'resource' => 'merge-request-comment',
-                    'resourceId' => $this->commentId
-                ));
-            }
+                if(!$comment) {
+                    throw new PageNotFoundException('', array(
+                        'resource' => 'merge-request-comment',
+                        'resourceId' => $this->commentId
+                    ));
+                }
 
-            $comment->delete();
+                $comment->delete();
 
-            MergeRequestComment::deleteByExample(new DBExample(array(
-                'mergeRequestId' => $this->mergeRequestId,
-                'parentId' => $this->commentId
-            )));
+                MergeRequestComment::deleteByExample(new DBExample(array(
+                    'mergeRequestId' => $this->mergeRequestId,
+                    'parentId' => $this->commentId
+                )));
 
-            App::response()->setStatus(204);
+                App::response()->setStatus(204);
 
-            return;
-        }
+                return;
 
-
-        $form = new Form(array(
-            'id' => 'h-gitter-merge-request-comment-form-' . uniqid(),
-            'class' => 'h-gitter-merge-request-comment-form',
-            'action' => App::router()->getUri('h-gitter-merge-request-comment', array(
-                'repoId' => $this->repoId,
-                'mergeRequestId' => $this->mergeRequestId,
-                'commentId' => empty($this->commentId) ? 0 : $this->commentId
-            )),
-            'model' => 'MergeRequestComment',
-            'reference' => array(
-                'id' => $this->commentId
-            ),
-            'fieldsets' => array(
-                'form' => array(
-                    new HiddenInput(array(
-                        'name' => 'mergeRequestId',
-                        'value' => $this->mergeRequestId
-                    )),
-
-                    new HiddenInput(array(
-                        'name' => 'userId',
-                        'value' => App::session()->getUser()->id
-                    )),
-
-                    new HiddenInput(array(
-                        'name' => 'file',
-                        'default' => App::request()->getParams('file')
-                    )),
-
-                    new HiddenInput(array(
-                        'name' => 'line',
-                        'default' => App::request()->getParams('line')
-                    )),
-
-                    new HiddenInput(array(
-                        'name' => 'parentId',
-                        'default' => App::request()->getParams('parentId')
-                    )),
-
-                    new HiddenInput(array(
-                        'name' => 'ctime',
-                        'default' => time()
-                    )),
-
-                    new TextareaInput(array(
-                        'name' => 'comment',
-                        'placeholder' => Lang::get($this->_plugin . '.comment-form-comment-placeholder'),
-                        'required' => true,
-                        'rows' => 5,
-                        'cols' => 50
-                    )),
-                ),
-
-                'submits' => array(
-                    new SubmitInput(array(
-                        'name' => 'valid',
-                        'icon' => 'pencil',
-                        'value' => lang::get($this->_plugin . '.comment-form-submit-btn')
-                    )),
-
-                    new ButtonInput(array(
-                        'name' => 'cancel',
-                        'value' => Lang::get('main.cancel-button'),
-                        'attributes' => array(
-                            'e-click' => 'function() { commentFormDisplayed = false; }'
+            case 'get' :
+                return \Hawk\Plugins\HWidgets\CommentForm::getInstance(array(
+                    'id' => 'h-gitter-merge-request-comment-form-' . uniqid(),
+                    'action' => App::router()->getUri(
+                        'h-gitter-merge-request-comment',
+                        array(
+                            'repoId' => $this->repoId,
+                            'mergeRequestId' => $this->mergeRequestId,
+                            'commentId' => 0
+                        ),
+                        array(
+                            'file' => App::request()->getParams('file'),
+                            'line' => App::request()->getParams('line'),
+                            'parentId' => App::request()->getParams('parentId')
                         )
-                    ))
-                )
-            )
-        ));
+                    )
+                ))->display();
 
-        if(!$form->submitted()) {
-            return $form->display();
-        }
-        elseif($form->check()) {
-            $form->register(false);
+            default :
+                App::response()->setContentType('json');
+                $comment = new MergeRequestComment(array(
+                    'mergeRequestId' => $this->mergeRequestId,
+                    'userId' => App::session()->getUser()->id,
+                    'file' => App::request()->getParams('file'),
+                    'line' => App::request()->getParams('line'),
+                    'parentId' => App::request()->getParams('parentId'),
+                    'comment' => App::request()->getBody('content'),
+                    'ctime' => time()
+                ));
 
-            $form->addReturn($form->object);
+                $comment->save();
 
-            return $form->response(Form::STATUS_SUCCESS);
+
+                $repo = Repo::getById($this->repoId);
+                $mr = MergeRequest::getById($this->mergeRequestId);
+
+                $subject = Lang::get($this->_plugin . '.new-comment-subject-subject', array(
+                    'author' => App::session()->getUser()->username,
+                    'id' => $mr->id
+                ));
+                $content = View::make($this->getPLugin()->getView('notifications/new-comment.tpl'), array(
+                    'author' => App::session()->getUser()->username,
+                    'mrID' => $mr->id,
+                    'comment' => $comment->comment,
+                    'repoId' => $repo->id
+                ));
+
+                $recipients = $mr->getParticipants();
+
+                $email = new Mail();
+                $email  ->subject($subject)
+                        ->content($content)
+                        ->to(array_map(function($user) {
+                            return $user->email;
+                        }, $recipients))
+                        ->send();
+
+                return array(
+                    'data' => $comment
+                );
         }
     }
 }

@@ -13,13 +13,11 @@
     {/if}
 
     {assign name="presentationContent"}
-        <p>{text key="h-gitter.merge-request-intro" source="{$mr->from}" to="{$mr->to}"}</p>
-        <p>{text key=""}
-
         {widget plugin="h-widgets"
                 class="MetaData"
                 userId="{$author->id}"
-                meta="{text key='h-gitter.merge-request-opened-label' author='{$author->username}' date='{$mr->formattedDate}'}"
+                meta="{text key='h-gitter.merge-request-opened-label' username='{$author->username}' date='{$mr->formattedDate}'}"
+                description="{text key='h-gitter.merge-request-intro' source='{$mr->from}' to='{$mr->to}'}"
                 size="small"
         }
 
@@ -76,7 +74,7 @@
         <div class="col-xs-12">
             <input type="text" class="form-control new-comment-input" placeholder="{text key='h-gitter.discussion-response-btn'}" e-click="$root.displayCommentResponseForm.bind($root)" e-show="!$discussion.commentFormDisplayed" />
             <div class="response-wrapper col-xs-12" e-show="$discussion.commentFormDisplayed">
-                <div e-template="commentForm"></div>
+                <div e-html="commentForm" e-attr="{id : 'h-gitter-discussion-response-' + $discussion.id}"></div>
             </div>
         </div>
     </template>

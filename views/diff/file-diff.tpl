@@ -19,10 +19,10 @@
                 <td class="file-diff-block-summary">{{ $diff['summary'] }}</td>
             </tr>
             {foreach($diff['details'] as $i => $line)}
-                <tr class="{{ $line['type'] === 'addition' ? 'alert-success' : ($line['type'] === 'deletion' ? 'alert-danger' : '')}}">
+                <tr class="{{ $line['type'] }} {{ $line['type'] === 'addition' ? 'alert-success' : ($line['type'] === 'deletion' ? 'alert-danger' : '')}}">
                     <td class="prev-line-number">{{ $line['leftLineNumber'] }}</td>
                     <td class="new-line-number">{{ $line['rightLineNumber'] }}</td>
-                    <td class="code" id="{{uniqid()}}" e-ace="{language : '{{ $fileDiffs['extension'] }}', noLineNumber : true, readonly : true, highlightActiveLine : false}">{{{ $line['code'] }}}</td>
+                    <td class="code" id="{{uniqid()}}" e-ace="{language : '{{ $fileDiffs['extension'] }}', readonly : true, theme : 'monokai'}">{{{ $line['code'] }}}</td>
                 </tr>
             </tr>
             {/foreach}

@@ -24,6 +24,11 @@ class Installer extends PluginInstaller{
 
         MergeRequestComment::createTable();
 
+        $htracker = PLugin::get('h-tracker');
+        if($htracker && !$htracker->isInstalled()) {
+            $htracker->install();
+        }
+
         // Create permissions
         Permission::add($this->_plugin . '.access-plugin', 1, 0);
         Permission::add($this->_plugin . '.create-projects', 0, 0);
@@ -51,6 +56,17 @@ class Installer extends PluginInstaller{
             'icon' => 'git-square',
             'action' => 'h-gitter-index'
         ));
+
+        $htracker = PLugin::get('h-tracker');
+        if($htracker && !$htracker->isActive()) {
+            $htracker->activate();
+
+            $items = MenuItem::getPluginMenuItems('h-tracker');
+
+            foreach($items as $item) {
+                $item->delete();
+            }
+        }
     }
 
     /**

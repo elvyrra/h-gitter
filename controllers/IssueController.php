@@ -102,34 +102,32 @@ class IssueController extends Controller {
         $form = null;
 
         $controller = HTracker\TicketController::getInstance(array('ticketId' => $this->issueId));
-        $result = $controller->edit();
 
-        $form = Form::getInstance('htracker-ticket-form');
+        Event::on('form.htracker-ticket-form.instanciated', function(Event $e) {
+            $form = $e->getData('form');
 
-        if(!$form->submitted()) {
+            if(!$form->submitted()) {
 
-            $form->id = 'h-gitter-issue-form';
+                $form->id = 'h-gitter-issue-form';
 
-            $form->inputs['projectId'] = new HiddenInput(array(
-                'name' => 'projectId',
-                'value' => $this->_project->id
-            ));
+                $form->inputs['projectId'] = new HiddenInput(array(
+                    'name' => 'projectId',
+                    'value' => $this->_project->id
+                ));
 
-            $form->inputs['cancel']->href = App::router()->getUri('h-gitter-repo-issues', array(
-                'repoId' => $this->repoId
-            ));
+                $form->inputs['cancel']->href = App::router()->getUri('h-gitter-repo-issues', array(
+                    'repoId' => $this->repoId
+                ));
 
-            $form->onsuccess = 'app.load(app.getUri("h-gitter-repo-issues", {repoId : ' . $this->repoId . '}))';
+                $form->onsuccess = 'app.load(app.getUri("h-gitter-repo-issues", {repoId : ' . $this->repoId . '}))';
+            }
+        });
 
-            $content = View::make(Plugin::get('h-tracker')->getView("ticket-form.tpl"), array(
-                'form' => $form,
-                'history' => $controller->history()
-            ));
+        $content = $controller->edit();
 
-            return RepoController::getInstance(array(
-                'repoId' => $this->repoId
-            ))->display('issues', $content);
-        }
+        return RepoController::getInstance(array(
+            'repoId' => $this->repoId
+        ))->display('issues', $content);
 
         return $result;
     }
