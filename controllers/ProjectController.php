@@ -35,7 +35,7 @@ class ProjectController extends Controller {
                         ));
 
                         return HWidgets\MetaData::getInstance(array(
-                            'userId' => $project->userId,
+                            'name' => $project->name,
                             'meta' => $project->name,
                             'description' => $project->description . '<br />' . $description,
                             'size' => 'small'
