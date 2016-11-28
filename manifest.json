@@ -5,7 +5,7 @@
     "author": "Elvyrra SAS",
     "dependencies": {
         "h-tracker" : {
-            "version" : "1.4.0"
+            "version" : "1.5.0"
         },
         "h-widgets" : {
             "version" : "1.0.0",

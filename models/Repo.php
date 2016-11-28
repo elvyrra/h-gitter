@@ -8,6 +8,8 @@
 
 namespace Hawk\Plugins\HGitter;
 
+use \Hawk\Plugins\HTracker as HTracker;
+
 
 class Repo extends Model {
     protected static $tablename = 'HGitterRepo';
@@ -435,5 +437,25 @@ class Repo extends Model {
         }
 
         return true;
+    }
+
+    /**
+     * Get the issues open on the repository
+     * @return array The list of HTRacker\Ticket
+     */
+    public function getIssues() {
+        $htracker = Plugin::get('h-tracker');
+
+        if($htracker && $htracker->isInstalled()) {
+            $htrackerProject = HTracker\Project::getByExample(new DBExample(array(
+                'name' => $this->name
+            )));
+
+            return HTracker\Ticket::getListByExample(new DBExample(array(
+                'projectId' => $htrackerProject->id
+            )));
+        }
+
+        return array();
     }
 }

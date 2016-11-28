@@ -353,6 +353,7 @@ class RepoController extends Controller {
             ),
             'issues' => PLugin::get('h-tracker') ? array(
                 'icon' => 'bug',
+                'number' => count($repo->getIssues()),
                 'url' => App::router()->getUri('h-gitter-repo-issues', array('repoId' => $repo->id))
             ) : null,
             'merge-requests' => array(
