@@ -2,6 +2,8 @@
 
 namespace Hawk\Plugins\HGitter;
 
+use Hawk\Plugins\HWidgets as HWidgets;
+
 class RepoController extends Controller {
     /**
      * Display the list of the repositories of the current project
@@ -20,6 +22,9 @@ class RepoController extends Controller {
 
         $list = new ItemList(array(
             'id' => 'h-gitter-repos-list',
+            'sorts' => array(
+                'mtime' => DB::SORT_DESC
+            ),
             'data' => $repos,
             'controls' => array(
                 $project->isUserMaster() ?
@@ -49,6 +54,21 @@ class RepoController extends Controller {
             ),
 
             'fields' => array(
+                'actions' => array(
+                    'independant' => true,
+                    'sort' => false,
+                    'search' => false,
+                    'display' => function($value, $field, $line) {
+                        return Icon::make(array(
+                            'icon' => 'pencil',
+                            'class' => 'text-primary',
+                            'href' => App::router()->getUri('h-gitter-edit-repo', array(
+                                'repoId' => $line->id
+                            )),
+                            'target' => 'dialog'
+                        ));
+                    }
+                ),
                 'name' => array(
                     'label' => Lang::get($this->_plugin . '.repos-list-name-label'),
                     'href' => function($value, $field, $repo) {
@@ -63,7 +83,7 @@ class RepoController extends Controller {
                 'mtime' => array(
                     'label' => Lang::get($this->_plugin . '.repos-list-mtime-label'),
                     'display' => function($value) {
-                        return date(Lang::get('main.time-format'), $value);
+                        return Utils::timeAgo($value);
                     }
                 ),
             )
@@ -106,6 +126,11 @@ class RepoController extends Controller {
             ));
         }
 
+        $availableProjects = array_filter(Project::getAll('id'), function($project) {
+            return $project->isUserMaster();
+        });
+
+
         if(!$project->isUserMaster()) {
             throw new ForbiddenException();
         }
@@ -130,12 +155,6 @@ class RepoController extends Controller {
             'fieldsets' => array(
                 'global' => array(
                     'legend' => Lang::get($this->_plugin . '.edit-repo-global-legend'),
-
-                    empty($this->repoId) ?
-                        new HiddenInput(array(
-                            'name' => 'projectId',
-                            'value' => $projectId
-                        )) : null,
 
                     empty($this->repoId) ?
                         new HiddenInput(array(
@@ -180,7 +199,17 @@ class RepoController extends Controller {
                         ),
                     )),
 
-                    new TextareaInput(array(
+                    new SelectInput(array(
+                        'name' => 'projectId',
+                        'required' => true,
+                        'default' => $projectId,
+                        'label' => Lang::get($this->_plugin . '.edit-repo-projectId-label'),
+                        'options' => array_map(function($project) {
+                            return $project->name;
+                        }, $availableProjects)
+                    )),
+
+                    new HWidgets\MarkdownInput(array(
                         'name' => 'description',
                         'rows' => '3',
                         'required' => true,

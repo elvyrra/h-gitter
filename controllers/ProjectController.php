@@ -2,6 +2,8 @@
 
 namespace Hawk\Plugins\HGitter;
 
+use \Hawk\Plugins\HWidgets as HWidgets;
+
 class ProjectController extends Controller {
     public function index() {
         $projects = array_filter(Project::getAll(), function($project) {
@@ -19,37 +21,93 @@ class ProjectController extends Controller {
                     'target' => 'dialog'
                 )
             ),
-            'fields' => array(
+            'fields' => array (
                 'name' => array(
-                    'label' => Lang::get($this->_plugin . '.projects-list-name-label'),
+                    'label' => '',
+                    'sort' => false,
                     'href' => function($value, $field, $project) {
                         return App::router()->getUri('h-gitter-project-repos', array('projectId' => $project->id));
                     },
+                    'display' => function($value, $field, $project) {
+                        $description = Lang::get($this->_plugin . '.project-list-name-meta', array(
+                            'author' => User::getById($project->userId)->username,
+                            'date' => date(Lang::get('main.date-format'), $project->ctime)
+                        ));
+
+                        return HWidgets\MetaData::getInstance(array(
+                            'userId' => $project->userId,
+                            'meta' => $project->name,
+                            'description' => $project->description . '<br />' . $description,
+                            'size' => 'small'
+                        ))->display();
+                    }
                 ),
 
                 'description' => array(
-                    'label' => Lang::get($this->_plugin . '.projects-list-description-label')
+                    'hidden' => true
                 ),
 
                 'ctime' => array(
-                    'label' => Lang::get($this->_plugin . '.projects-list-ctime-label'),
-                    'display' => function($value) {
-                        return date(Lang::get('main.date-format'), $value);
-                    }
+                    'hidden' => true
                 ),
 
                 'userId' => array(
-                    'label' => Lang::get($this->_plugin . '.projects-list-userId-label'),
-                    'display' => function($value) {
-                        return User::getById($value)->username;
+                    'hidden' => true
+                ),
+
+                'info' => array(
+                    'independant' => true,
+                    'label' => '',
+                    'sort' => false,
+                    'search' => false,
+                    'display' => function($value, $field, $project) {
+                        // Display general information on the project (number of repositories, number of merge request, number of issues)
+                        $members = $project->getUsers();
+                        $repos = Repo::getListByExample(new DBExample(array(
+                            'projectId' => $project->id
+                        )));
+
+                        $mergeRequests = 0;
+
+                        foreach($repos as $repo) {
+                            $mergeRequests += count($repo->getOpenMergeRequests());
+                        }
+
+                        return View::make($this->getPlugin()->getView('project-info.tpl'), array(
+                            'members' => count($members) + 1,
+                            'repos' => count($repos),
+                            'mergeRequests' => $mergeRequests
+                        ));
                     }
-                )
+                ),
+
+                'actions' => array(
+                    'independant' => true,
+                    'display' => function($value, $field, $project) {
+                        if(!$project->isUserMaster()) {
+                            return '';
+                        }
+
+                        return Icon::make(array(
+                            'icon' => 'pencil',
+                            'class' => 'text-primary',
+                            'href' => App::router()->getUri('h-gitter-edit-project', array(
+                                'projectId' => $project->id
+                            )),
+                            'target' => 'dialog'
+                        ));
+                    },
+                    'search' => false,
+                    'sort' => false
+                ),
             )
         ));
 
         if($list->isRefreshing()) {
             return $list->display();
         }
+
+        $this->addCss($this->getPlugin()->getCssUrl('project-list.less'));
 
         return NoSidebarTab::make(array(
             'icon' => 'git-square',
@@ -66,7 +124,6 @@ class ProjectController extends Controller {
             }
         }
         else {
-
             if(!$project->isUserMaster()) {
                 throw new ForbiddenException();
             }
@@ -102,7 +159,7 @@ class ProjectController extends Controller {
                         'label' => Lang::get($this->_plugin . '.edit-project-name-label')
                     )),
 
-                    new TextareaInput(array(
+                    new HWidgets\MarkdownInput(array(
                         'name' => 'description',
                         'rows' => '3',
                         'required' => true,
