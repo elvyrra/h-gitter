@@ -451,6 +451,10 @@ class Repo extends Model {
                 'name' => $this->name
             )));
 
+            if(!$htrackerProject) {
+                return array();
+            }
+
             return HTracker\Ticket::getListByExample(new DBExample(array(
                 'projectId' => $htrackerProject->id
             )));
