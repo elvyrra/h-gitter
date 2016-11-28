@@ -116,7 +116,7 @@ class RepoController extends Controller {
 
         $masters = $repo ? $repo->decodedMasters : array();
         foreach($users as $user) {
-            if($repo->isUserMaster($user)) {
+            if($project->isUserMaster($user)) {
                 $masters[] = $user->id;
             }
         }
