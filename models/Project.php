@@ -117,8 +117,8 @@ class Project extends Model {
     public function getUsers() {
         return User::getListByExample(new DBExample(array(
             'id' => array(
-                '$in' => array_keys($this->decodedPrivileges)
-            )
+                '$in' => array_merge(array_keys($this->decodedPrivileges), array($this->userId))
+            ),
         )));
     }
 }

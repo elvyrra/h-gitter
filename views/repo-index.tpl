@@ -9,7 +9,7 @@
                                 {icon icon="{$item['icon']}"}
                                 {text key="{'h-gitter.repo-menu-item-' . $name}"}
                                 {if(!empty($item['number']))}
-                                    <span class="badge bg-info">{{ $item['number'] }}</span>
+                                    <span class="badge alert-info">{{ $item['number'] }}</span>
                                 {/if}
                             </a>
                         </li>

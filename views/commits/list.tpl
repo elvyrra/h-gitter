@@ -13,6 +13,7 @@
                                 {widget plugin="h-widgets"
                                         class="MetaData"
                                         userId="{$commit->user->id}"
+                                        size="small"
                                         meta="{$commit->message}"
                                         description="{text key='h-gitter.repo-commits-time-and-author' author='{$commit->author}' time='{$commit->time}'}"}
                             </td>

@@ -12,17 +12,17 @@ class IssueController extends Controller {
             throw new InternalErrorException('The plugin "H-tracker" needs to be installed to display this page.');
         }
 
-        $repo = Repo::getById($this->repoId);
+        $this->_repo = Repo::getById($this->repoId);
 
         // Check if the project exists on h-tracker, else create it
         $project = HTracker\Project::getByExample(new DBExample(array(
-            'name' => $repo->name
+            'name' => $this->_repo->name
         )));
 
         if(!$project) {
             $project = new HTracker\Project(array(
-                'name' => $repo->name,
-                'description' => $repo->description,
+                'name' => $this->_repo->name,
+                'description' => $this->_repo->description,
                 'author' => App::session()->getUser()->id,
                 'ctime' => time(),
                 'mtime' => time()
@@ -39,45 +39,118 @@ class IssueController extends Controller {
      */
     public function index() {
         $this->init();
+        $users = array();
+        foreach($this->_repo->getUsers() as $user) {
+            $users[$user->id] = $user;
+        }
+        $options = json_decode(Option::get('h-tracker.status'));
+        $status = array();
+        foreach($options as $option){
+            $status[$option->id] = $option->label;
+        }
 
-        // Get the list of the project tasks
+        $param = array(
+            'id' => 'h-gitter-issues-list',
+            'model' => '\Hawk\Plugins\HTracker\Ticket',
+            'filter' => new DBExample(array(
+                'projectId' => $this->_project->id
+            )),
+            'reference' => 'id',
+            'controls' => array(
+                 array(
+                    'label' => Lang::get($this->_plugin . '.issue-new-btn'),
+                    'icon' => 'plus',
+                    'class' => 'btn-primary',
+                    'href' => App::router()->getUri('h-gitter-repo-issue', array(
+                        'repoId' => $this->repoId,
+                        'issueId' => 0
+                    ))
+                )
+            ),
+            'fields' => array(
+                'id' => array(
+                    'label' => Lang::get('h-tracker.ticket-list-id-label'),
+                    'display' => function ($value) {
+                        return '#'.$value;
+                    },
+                    'href' => function ($value, $field, $ticket) {
+                        return App::router()->getUri('h-gitter-repo-issue', array(
+                            'repoId' => $this->repoId,
+                            'issueId' => $ticket->id
+                        ));
+                    },
+                ),
 
-        // Listen on list instanciation to modify it after
-        $list = null;
-        Event::on('list.htracker-ticket-list.instanciated', function(Event $event) use(&$list){
-            $list = $event->getData('list');
-        });
+                'title' => array(
+                    'label' => Lang::get('h-tracker.ticket-list-title-label'),
+                    'href'  => function ($value, $field, $ticket) {
+                        return App::router()->getUri('h-gitter-repo-issue', array(
+                            'repoId' => $this->repoId,
+                            'issueId' => $ticket->id
+                        ));
+                    },
+                ),
 
-        HTracker\TicketController::getInstance()->index();
+                'target' => array(
+                    'label'   => Lang::get('h-tracker.ticket-list-target-label'),
+                    'display' => function ($value, $field, $ticket) use ($users){
+                        if(empty($value)) {
+                            return ' - ';
+                        }
 
-        $list->id = 'h-gitter-issues-list';
+                        $user = isset($users[$value]) ? $users[$value] : null;
+                        if($user) {
+                            return $user->username;
+                        }
+                        else {
+                            return ' - ';
+                        }
+                    },
+                    'search'  => array(
+                        'type'       => 'select',
+                        'invitation' => ' - ',
+                        'options'    => array_map(function($user) {
+                            return $user->username;
+                        }, $users),
+                    ),
+                ),
 
-        // Update the list filter to force to load only the repo tasks
-        $list->filter = new DBExample(array(
-            'projectId' => $this->_project->id
-        ));
+                'priority' => array(
+                    'label' => Lang::get('h-tracker.ticket-list-priority-label'),
+                    'display' => function ($value, $field, $line) {
+                        return Lang::get('h-tracker.ticket-priority-'.(string) $value);
+                    },
+                    'search' => array(
+                        'type' => 'select',
+                        'invitation' => ' - ',
+                        'options' => HTracker\Ticket::getPrioritiesList(),
+                    ),
+                ),
 
-        // Update the label of the button to create a new issue
-        $list->controls = array(
-            array(
-                'label' => Lang::get($this->_plugin . '.issue-new-btn'),
-                'icon' => 'plus',
-                'class' => 'btn-primary',
-                'href' => App::router()->getUri('h-gitter-repo-issue', array(
-                    'repoId' => $this->repoId,
-                    'issueId' => 0
-                ))
+                'status' => array(
+                    'label' => Lang::get('h-tracker.ticket-list-status-label'),
+                    'search' => false,
+                    'sort' => false,
+                    'display' => function ($value) use ($status) {
+                        return isset($status[$value]) ? $status[$value] : '';
+                    },
+                ),
+
+                // 'deadLine' => array(
+                //     'label'   => Lang::get($this->_plugin . '.ticket-list-deadline-label'),
+                //     'display' => function ($value, $field) {
+                //         return date(Lang::get('main.date-format'), strtotime($value));
+                //     },
+                //     'search'  => array(
+                //         'type' => 'date'
+                //     )
+                // ),
+
             )
         );
 
-        // Update the href in the list
-        $list->fields['id']->href = function ($value, $field, $ticket) {
-            return App::router()->getUri('h-gitter-repo-issue', array(
-                'repoId' => $this->repoId,
-                'issueId' => $ticket->id
-            ));
-        };
-        $list->fields['title']->href = $list->fields['id']->href;
+
+        $list = new ItemList($param);
 
         $content = $list->display();
 
