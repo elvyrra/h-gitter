@@ -107,6 +107,10 @@ class CodeController extends Controller {
 
         $breadcrumb = $this->getBreadcrumb();
 
+        if($list->isRefreshing()) {
+            return $list->display();
+        }
+
         $content = View::make($this->getPlugin()->getView('code/folder.tpl'), array (
             'list' => $list,
             'breadcrumb' => $breadcrumb
