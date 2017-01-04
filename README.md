@@ -28,8 +28,8 @@ H Gitt'r is a Git repository manager. It allows the users of the application to 
 
 # Dependencies
 This plugin depends on the plugins :
-* [http://hawk-app.fr/#!/store/plugins/h-tracker](H Tracker)
-* [http://hawk-app.fr/#!/store/plugins/h-widgets](H Widgets)
+* <a href="http://hawk-app.fr/#!/store/plugins/h-tracker" target="_blank">H tracker </a>
+* <a href="http://hawk-app.fr/#!/store/plugins/h-widgets" target="_blank">H Widgets</a>
 
 # Author
 This plugin is devloped by the company Elvyrra
