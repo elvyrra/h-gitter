@@ -1,1 +1,37 @@
-# H Gitt'r
+# What is H Gitt'r ?
+
+H Gitt'r is a Git repository manager. It allows the users of the application to share their code, see the git properties of the repository :
+
+* The branches
+* The commits
+* The tags
+
+# Features
+
+* Create / Modify / Delete a project
+* Create / Modify / Delete a repository
+* Import an existing repository in H Gitt'r
+* Manage the users's rights on each project / repo
+* Choose the default branch of the repository
+* Display the code in the repository
+* Display the commits, and the diff of any commit
+* Display the open branches, and compare branches
+* Display the tags of the repository
+* A bug tracker, based on the plugin H-tracker
+* A merge request engine, like on git hub, ot gitlab
+* Code review
+* Comment the code of a merge request
+* Like / unlike a merge request
+* Accept a merge request
+* Create branches
+* Remove branches
+
+# Dependencies
+This plugin depends on the plugins :
+* [http://hawk-app.fr/#!/store/plugins/h-tracker](H Tracker)
+* [http://hawk-app.fr/#!/store/plugins/h-widgets](H Widgets)
+
+# Author
+This plugin is devloped by the company Elvyrra
+
+©Elvyrra S.A.S
