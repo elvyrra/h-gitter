@@ -61,7 +61,8 @@ class RepoController extends Controller {
                     'display' => function($value, $field, $line) {
                         return Icon::make(array(
                             'icon' => 'pencil',
-                            'class' => 'text-primary',
+                            'size' => 'lg',
+                            'class' => 'disabled',
                             'href' => App::router()->getUri('h-gitter-edit-repo', array(
                                 'repoId' => $line->id
                             )),
@@ -74,6 +75,15 @@ class RepoController extends Controller {
                     'href' => function($value, $field, $repo) {
                         return App::router()->getUri('h-gitter-display-repo', array('repoId' => $repo->id));
                     },
+                    'display' => function($value, $field, $repo) {
+                        return HWidgets\MetaData::getInstance(array(
+                            'avatar' => $repo->getAvatarUrl(),
+                            'name' => $repo->name,
+                            'meta' => $repo->name,
+                            'description' => substr($repo->description, 0, 300),
+                            'size' => 'small'
+                        ))->display();
+                    }
                 ),
 
                 'description' => array(
@@ -217,6 +227,18 @@ class RepoController extends Controller {
                         'label' => Lang::get($this->_plugin . '.edit-repo-description-label')
                     )),
 
+                    new FileInput(array(
+                        'name' => 'avatar',
+                        'extensions' => array(
+                            'png',
+                            'jpg',
+                            'gif',
+                            'tif'
+                        ),
+                        'label' => Lang::get($this->_plugin . '.edit-repo-avatar-label'),
+                        'after' => ($repo && $repo->getAvatarUrl()) ? '<img src="' . $repo->getAvatarUrl() . '" class="user-avatar"/>' : '',
+                    )),
+
                     new SelectInput(array(
                         'name' => 'defaultBranch',
                         'label' => Lang::get($this->_plugin . '.edit-repo-default-branch-label'),
@@ -311,13 +333,24 @@ class RepoController extends Controller {
                 // Save the repository object in the database
                 $repo->save();
 
-                return $form->response(Form::STATUS_SUCCESS);
+                $id = $repo->id;
             }
             else {
                 $form->object->decodedMasters = array_keys(App::request()->getBody('masters'));
 
-                return $form->register();
+                $id = $form->register(false);
             }
+
+            $upload = Upload::getInstance('avatar');
+
+            if($upload) {
+                $basename = 'repo-avatar-' . $id;
+                $dirname = $this->getPlugin()->getPublicUserfilesDir();
+
+                $upload->move($upload->getFile(), $dirname, $basename);
+            }
+
+            return $form->response(Form::STATUS_SUCCESS);
         }
     }
 

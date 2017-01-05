@@ -462,4 +462,20 @@ class Repo extends Model {
 
         return array();
     }
+
+
+    /**
+     * Get the avatr URL of the project
+     * @return string
+     */
+    public function getAvatarUrl() {
+        $basename = 'repo-avatar-' . $this->id;
+        $plugin = Plugin::current();
+
+        if(is_file($plugin->getPublicUserfilesDir() . $basename)) {
+            return $plugin->getUserfilesUrl($basename);
+        }
+
+        return '';
+    }
 }

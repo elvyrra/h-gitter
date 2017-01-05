@@ -70,6 +70,10 @@ require(['emv', 'emv-directives'], (EMV) => {
                 delete this.privileges[user.userId];
             }
         }
+
+        chooseAvatar(self, event) {
+            alert('coucou');
+        }
     }
 
     const model = new Project();

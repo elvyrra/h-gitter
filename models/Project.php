@@ -78,6 +78,11 @@ class Project extends Model {
         }
     }
 
+    /**
+     * Check if the project is visible for a given user
+     * @param   User  $user The user to check the project is visible for
+     * @return  boolean
+     */
     public function isVisible($user = null) {
         if(!$user) {
             $user = App::session()->getUser();
@@ -98,6 +103,11 @@ class Project extends Model {
         return false;
     }
 
+    /**
+     * Check if a user has the mast privileges on the project
+     * @param   User  $user The user to heck  the privileges'
+     * @return boolean
+     */
     public function isUserMaster($user = null) {
         if(!$user) {
             $user = App::session()->getUser();
@@ -114,11 +124,31 @@ class Project extends Model {
         return false;
     }
 
+
+    /**
+     * Get the project users
+     * @return array
+     */
     public function getUsers() {
         return User::getListByExample(new DBExample(array(
             'id' => array(
                 '$in' => array_merge(array_keys($this->decodedPrivileges), array($this->userId))
             ),
         )));
+    }
+
+    /**
+     * Get the avatr URL of the project
+     * @return string
+     */
+    public function getAvatarUrl() {
+        $basename = 'project-avatar-' . $this->id;
+        $plugin = Plugin::current();
+
+        if(is_file($plugin->getPublicUserfilesDir() . $basename)) {
+            return $plugin->getUserfilesUrl($basename);
+        }
+
+        return '';
     }
 }

@@ -5,6 +5,9 @@ namespace Hawk\Plugins\HGitter;
 use \Hawk\Plugins\HWidgets as HWidgets;
 
 class ProjectController extends Controller {
+    /**
+     * Display the list of the projects
+     */
     public function index() {
         $projects = array_filter(Project::getAll(), function($project) {
             return $project->isVisible();
@@ -22,6 +25,27 @@ class ProjectController extends Controller {
                 )
             ),
             'fields' => array (
+                'actions' => array(
+                    'independant' => true,
+                    'display' => function($value, $field, $project) {
+                        if(!$project->isUserMaster()) {
+                            return '';
+                        }
+
+                        return Icon::make(array(
+                            'icon' => 'pencil',
+                            'size' => 'lg',
+                            'class' => 'disabled',
+                            'href' => App::router()->getUri('h-gitter-edit-project', array(
+                                'projectId' => $project->id
+                            )),
+                            'target' => 'dialog'
+                        ));
+                    },
+                    'search' => false,
+                    'sort' => false
+                ),
+
                 'name' => array(
                     'label' => '',
                     'sort' => false,
@@ -35,6 +59,7 @@ class ProjectController extends Controller {
                         ));
 
                         return HWidgets\MetaData::getInstance(array(
+                            'avatar' => $project->getAvatarUrl(),
                             'name' => $project->name,
                             'meta' => $project->name,
                             'description' => $project->description . '<br />' . $description,
@@ -79,27 +104,7 @@ class ProjectController extends Controller {
                             'mergeRequests' => $mergeRequests
                         ));
                     }
-                ),
-
-                'actions' => array(
-                    'independant' => true,
-                    'display' => function($value, $field, $project) {
-                        if(!$project->isUserMaster()) {
-                            return '';
-                        }
-
-                        return Icon::make(array(
-                            'icon' => 'pencil',
-                            'class' => 'text-primary',
-                            'href' => App::router()->getUri('h-gitter-edit-project', array(
-                                'projectId' => $project->id
-                            )),
-                            'target' => 'dialog'
-                        ));
-                    },
-                    'search' => false,
-                    'sort' => false
-                ),
+                )
             )
         ));
 
@@ -116,6 +121,10 @@ class ProjectController extends Controller {
         ));
     }
 
+
+    /**
+     * Edit the properties of a project
+     */
     public function edit() {
         $project = Project::getById($this->projectId);
         if(empty($this->projectId)) {
@@ -165,6 +174,18 @@ class ProjectController extends Controller {
                         'required' => true,
                         'maxlength' => 4096,
                         'label' => Lang::get($this->_plugin . '.edit-project-description-label')
+                    )),
+
+                    new FileInput(array(
+                        'name' => 'avatar',
+                        'extensions' => array(
+                            'png',
+                            'jpg',
+                            'gif',
+                            'tif'
+                        ),
+                        'label' => Lang::get($this->_plugin . '.edit-project-avatar-label'),
+                        'after' => $project && $project->getAvatarUrl() ? '<img src="' . $project->getAvatarUrl() . '" class="user-avatar" />' : '',
                     )),
 
                     $this->projectId ? null : new HiddenInput(array(
@@ -248,7 +269,17 @@ class ProjectController extends Controller {
             ));
         }
         else {
-            return $form->treat();
+            $id = $form->treat(false);
+            $upload = Upload::getInstance('avatar');
+
+            if($upload) {
+                $basename = 'project-avatar-' . $id;
+                $dirname = $this->getPlugin()->getPublicUserfilesDir();
+
+                $upload->move($upload->getFile(), $dirname, $basename);
+            }
+
+            return $form->response(Form::STATUS_SUCCESS);
         }
     }
 }
