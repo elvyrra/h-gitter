@@ -336,7 +336,9 @@ class RepoController extends Controller {
                 $id = $repo->id;
             }
             else {
-                $form->object->decodedMasters = array_keys(App::request()->getBody('masters'));
+                if(App::request()->getBody('masters')) {
+                    $form->object->decodedMasters = array_keys(App::request()->getBody('masters'));
+                }
 
                 $id = $form->register(false);
             }
