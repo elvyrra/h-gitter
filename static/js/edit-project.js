@@ -1,10 +1,43 @@
-/* global app */
 'use strict';
 
-require(['emv', 'emv-directives'], (EMV) => {
+require(['app', 'lang', 'emv', 'emv-directives'], (app, Lang, EMV) => {
     const form = app.forms['h-gitter-project-form'];
     const allUsers = JSON.parse(form.inputs.users.val());
     const privileges = JSON.parse(form.inputs.privileges.val());
+
+    /**
+     * Find a user by it userId
+     * @param   {int} userId The user Id
+     * @returns {Object}     The found user information
+     */
+    const getUser = function(userId) {
+        return allUsers.find((user) => {
+            return user.id === parseInt(userId, 10);
+        });
+    };
+
+    /**
+     * This class manage the privileges
+     */
+    class Privilege extends EMV {
+        /**
+         * Constructor
+         * @param   {Object} data The initial data
+         */
+        constructor(data) {
+            super({
+                data : data,
+                computed : {
+                    user : function() {
+                        return getUser(this.userId);
+                    },
+                    username : function() {
+                        return this.user.username;
+                    }
+                }
+            });
+        }
+    }
 
     /**
      * This class manage the project edition
@@ -16,36 +49,17 @@ require(['emv', 'emv-directives'], (EMV) => {
         constructor() {
             super({
                 data : {
-                    privileges : privileges,
-                    users : allUsers
+                    privileges : privileges.map((data) => new Privilege(data))
                 },
                 computed : {
                     availableUsers : function() {
                         return allUsers.filter((user) => {
-                            return !(user.id in this.privileges);
-                        });
-                    },
-                    privilegesArray : function() {
-                        return Object.keys(this.privileges).map((userId) => {
-                            return {
-                                userId : userId,
-                                username : this.getUser(userId).username,
-                                privileges : this.privileges[userId]
-                            };
+                            return !this.privileges.find((privilege) => {
+                                return privilege.user === user;
+                            });
                         });
                     }
                 }
-            });
-        }
-
-        /**
-         * Find a user by it id
-         * @param   {int} userId The user id
-         * @returns {Object}     The found user
-         */
-        getUser(userId) {
-            return allUsers.find((user) => {
-                return user.id === parseInt(userId, 10);
             });
         }
 
@@ -55,9 +69,10 @@ require(['emv', 'emv-directives'], (EMV) => {
          */
         addUser(item) {
             if(item) {
-                this.privileges[item.id] = {
+                this.privileges.push(new Privilege({
+                    userId : item.id,
                     master : false
-                };
+                }));
             }
         }
 
@@ -67,18 +82,14 @@ require(['emv', 'emv-directives'], (EMV) => {
          */
         removeUser(user) {
             if(confirm(Lang.get('h-gitter.remove-project-user-confirm'))) {
-                delete this.privileges[user.userId];
-            }
-        }
+                const index = this.privileges.indexOf(user);
 
-        chooseAvatar(self, event) {
-            alert('coucou');
+                this.privileges.splice(index, 1);
+            }
         }
     }
 
     const model = new Project();
-
-    window.project = model;
 
     model.$apply(form.node.get(0));
 });

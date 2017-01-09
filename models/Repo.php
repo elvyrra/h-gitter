@@ -102,6 +102,8 @@ class Repo extends Model {
 
     private $gitRepo;
 
+    private $cloneRepo;
+
     /**
      * Constructor
      * @param array $data The initial project data
@@ -219,6 +221,25 @@ class Repo extends Model {
         return $this->gitRepo;
     }
 
+    /**
+     * Get the path of the clone repository. The clone repository is used to compute merge actions
+     * @return string Tge path of the clone repository
+     */
+    public function getCloneRepoDirname() {
+        return $this->getProject()->getDirname() . '/' . $this->name . '-clone' ;
+    }
+
+    /**
+     * Get the clone repository
+     * @return Git
+     */
+    public function getCloneRepo() {
+        if(!$this->cloneRepo) {
+            $this->cloneRepo = Git::open($this->getCloneRepoDirname());
+        }
+
+        return $this->cloneRepo;
+    }
 
     /**
      * Get information about a commit. This method caches the commit informations in database to increase treatments
@@ -351,7 +372,7 @@ class Repo extends Model {
                         $detailsLine['rightLineNumber'] = $rightFirstLine + $rightOffset;
                         $detailsLine['leftLineNumber'] = '';
                         $detailsLine['type'] = 'addition';
-                        $detailsLine['code'] = substr($line, 0, 1) . substr($line, 2);
+                        $detailsLine['code'] = substr($line, 1);
                         $rightOffset++;
                         $result['differences'][$filename]['additions'] ++;
                     }
@@ -359,7 +380,7 @@ class Repo extends Model {
                         $detailsLine['leftLineNumber'] = $leftFirstLine + $leftOffset;
                         $detailsLine['rightLineNumber'] = '';
                         $detailsLine['type'] = 'deletion';
-                        $detailsLine['code'] = substr($line, 0, 1) . substr($line, 2);
+                        $detailsLine['code'] = substr($line, 1);
                         $leftOffset++;
                         $result['differences'][$filename]['deletions'] ++;
                     }
@@ -463,16 +484,23 @@ class Repo extends Model {
         return array();
     }
 
+    public function getAvatarBasename() {
+        return 'repo-avatar-' . $this->id;
+    }
+
+    public function getAvatarFilename() {
+        Plugin::current()->getPublicUserfilesDir() . $this->getAvatarBasename();
+    }
 
     /**
      * Get the avatr URL of the project
      * @return string
      */
     public function getAvatarUrl() {
-        $basename = 'repo-avatar-' . $this->id;
+        $basename = $this->getAvatarBasename();
         $plugin = Plugin::current();
 
-        if(is_file($plugin->getPublicUserfilesDir() . $basename)) {
+        if(is_file($this->getAvatarFilename())) {
             return $plugin->getUserfilesUrl($basename);
         }
 

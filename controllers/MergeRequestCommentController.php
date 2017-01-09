@@ -54,22 +54,23 @@ class MergeRequestCommentController extends Controller {
             default :
                 App::response()->setContentType('json');
                 $comment = new MergeRequestComment(array(
-                    'mergeRequestId' => $this->mergeRequestId,
-                    'userId' => App::session()->getUser()->id,
+                    'mergeRequestId' => (int) $this->mergeRequestId,
+                    'userId' => (int) App::session()->getUser()->id,
                     'file' => App::request()->getParams('file'),
-                    'line' => App::request()->getParams('line'),
-                    'parentId' => App::request()->getParams('parentId'),
+                    'line' => (int) App::request()->getParams('line'),
+                    'parentId' => (int) App::request()->getParams('parentId'),
                     'comment' => App::request()->getBody('content'),
                     'ctime' => time()
                 ));
 
                 $comment->save();
+                $comment->id = (int) $comment->id;
 
 
                 $repo = Repo::getById($this->repoId);
                 $mr = MergeRequest::getById($this->mergeRequestId);
 
-                $subject = Lang::get($this->_plugin . '.new-comment-subject-subject', array(
+                $subject = Lang::get($this->_plugin . '.new-comment-subject', array(
                     'author' => App::session()->getUser()->username,
                     'id' => $mr->id
                 ));
@@ -80,15 +81,19 @@ class MergeRequestCommentController extends Controller {
                     'repoId' => $repo->id
                 ));
 
-                $recipients = $mr->getParticipants();
+                $recipients = $mr->getParticipants(array(
+                    App::session()->getUser()->id
+                ));
 
-                $email = new Mail();
-                $email  ->subject($subject)
-                        ->content($content)
-                        ->to(array_map(function($user) {
-                            return $user->email;
-                        }, $recipients))
-                        ->send();
+                if(!empty($recipients)) {
+                    $email = new Mail();
+                    $email  ->subject($subject)
+                            ->content($content)
+                            ->to(array_map(function($user) {
+                                return $user->email;
+                            }, $recipients))
+                            ->send();
+                }
 
                 return array(
                     'data' => $comment

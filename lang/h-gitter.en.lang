@@ -41,7 +41,9 @@ remove-project-user-confirm = "De you really want to remove this user from this 
 ; Repositories list
 repos-list-title = "Gitt'r Project : {project}"
 new-repo-btn = "New repository"
+repos-list-project-settings-btn = "Project settings"
 repos-list-name-label = "Repository name"
+repos-list-repos-settings-btn = "Repository settings"
 repos-list-description-label = "Description"
 repos-list-mtime-label = "Last modification"
 
@@ -58,6 +60,8 @@ edit-repo-default-branch-label = "Default branch"
 edit-repo-privileges-legend = "Repository privileges"
 edit-repo-privivileges-username-label = "User"
 edit-repo-privivileges-master-label = "Master privileges on the repository ?"
+edit-repo-non-bare-message = "This repository is not a bare repository. H gitter can only manage bare repositories."
+edit-repo-same-name-message = "Another repository with the same name already exists in this project."
 
 ; Repository page
 repo-index-title = "Repository : {repo}"

@@ -140,23 +140,38 @@ class MergeRequest extends Model{
     public function hasConflicts() {
         if(!isset($this->hasConflicts)) {
             $repo = Repo::getById($this->repoId);
-            $currentBranch = $repo->getActiveBranch();
+            $clone = $repo->getCloneRepo();
+            $currentBranch = $clone->getActiveBranch();
             $conflicts = false;
+
+            // First download the main repository references in the cloned repository
+            $clone->fetch();
+
+            // First update the two branches on the clone repository
+            $clone->checkout($this->to);
+            $clone->pull();
+
+            $clone->fetch();
+            $clone->checkout($this->from);
+            $clone->pull();
+
             if($currentBranch !== $this->to) {
-                $repo->checkout($this->to);
+                $clone->checkout($this->to);
             }
 
             try {
-                $repo->run('merge --no-commit --no-ff ' . $this->from);
+                $clone->run('merge --no-commit --no-ff ' . $this->from);
             }
             catch(GitException $e) {
+                Utils::debug($e->getMessage());
                 $conflicts = true;
             }
 
-            $repo->run('merge --abort');
+            $clone->run('merge --abort');
+
 
             if($currentBranch !== $this->to) {
-                $repo->checkout($currentBranch);
+                $clone->checkout($currentBranch);
             }
 
 
@@ -246,12 +261,19 @@ class MergeRequest extends Model{
 
     /**
      * Get the users that participate to this merge request
+     * @param array $excludes The participants to excludes
      * @return array The merge request participants
      */
-    public function getParticipants() {
+    public function getParticipants($excludes = array()) {
+        $participans = array_diff($this->participants, $excludes);
+
+        if(empty($participants)) {
+            return array();
+        }
+
         return User::getListByExample(new DBExample(array(
             'id' => array(
-                '$in' => $this->participants
+                '$in' => array_diff($this->participants, $excludes)
             )
         )));
     }

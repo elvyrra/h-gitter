@@ -116,15 +116,20 @@ class MergeRequestController extends Controller {
                 'mrId' => $mr->id
             ));
 
-            $recipients = $mr->getParticipants();
+            $recipients = $mr->getParticipants(array(
+                App::session()->getUser()->id
+            ));
 
-            $email = new Mail();
-            $email  ->subject($subject)
-                    ->content($content)
-                    ->to(array_map(function($user) {
-                        return $user->email;
-                    }, $recipients))
-                    ->send();
+
+            if(!empty($recipients)) {
+                $email = new Mail();
+                $email  ->subject($subject)
+                        ->content($content)
+                        ->to(array_map(function($user) {
+                            return $user->email;
+                        }, $recipients))
+                        ->send();
+            }
 
             App::response()->setStatus(204);
 
@@ -238,6 +243,12 @@ class MergeRequestController extends Controller {
         }
 
         if($form->check()) {
+            if(!is_dir($repo->getCloneRepoDirname())) {
+                Git::cloneRemote($repo->path, $repo->getCloneRepoDirname());
+            }
+
+            $repo->getCloneRepo()->fetch();
+
             if(!$repo->canMerge($form->getData('from'), $form->getData('to'))) {
                 $form->error('from', Lang::get($this->_plugin . '.merge-request-branches-error', array('to' => $this->getData('to'))));
 
@@ -277,16 +288,21 @@ class MergeRequestController extends Controller {
                     'mrId' => $mr->id
                 ));
 
-                $recipients = $mr->getParticipants();
+                $recipients = $mr->getParticipants(array(
+                    App::session()->getUser()->id
+                ));
             }
 
-            $email = new Mail();
-            $email  ->subject($subject)
-                    ->content($content)
-                    ->to(array_map(function($user) {
-                        return $user->email;
-                    }, $recipients))
-                    ->send();
+
+            if(!empty($recipients)) {
+                $email = new Mail();
+                $email  ->subject($subject)
+                        ->content($content)
+                        ->to(array_map(function($user) {
+                            return $user->email;
+                        }, $recipients))
+                        ->send();
+            }
 
             return $form->response(Form::STATUS_SUCCESS);
         }
@@ -320,8 +336,12 @@ class MergeRequestController extends Controller {
      * @returns string The HTML Response
      */
     public function display() {
-        MergeRequest::updateTable();
         $repo = Repo::getById($this->repoId);
+
+        if(!is_dir($repo->getCloneRepoDirname())) {
+            Git::cloneRemote($repo->path, $repo->getCloneRepoDirname());
+        }
+
         $mr = MergeRequest::getByExample(new DBExample(array(
             'id' => $this->mergeRequestId,
             'repoId' => $this->repoId
@@ -501,15 +521,21 @@ class MergeRequestController extends Controller {
             throw new ForbiddenException('This merge request is not acceptable');
         }
 
-        // Merge the source branch
+        // Merge the source branch. The merge operation is computed on the clone repository, then pushed on the main repository
+        $clone = $repo->getCloneRepo();
 
-
-        $repo->checkout($mr->to);
-        $repo->merge($mr->from);
+        $clone->checkout($mr->to);
+        $clone->merge($mr->from);
 
         if($form->getData('removeSourceBranch')) {
+            // Remove the source branches on the clone and the main repositories
+            $clone->deleteBranch($mr->from, true);
             $repo->deleteBranch($mr->from, true);
         }
+
+        // Push the target branch on the main repository
+        $clone->checkout($mr->to);
+        $clone->push();
 
         $mr->merged = 1;
         $mr->save();
@@ -517,22 +543,26 @@ class MergeRequestController extends Controller {
         // Send the notification to all of mr participants
         $subject = Lang::get($this->_plugin . '.merge-request-accepted-subject', array(
             'repo' => $repo->name,
-            'id' => $form->object->id
+            'id' => $mr->id
         ));
         $content = View::make($this->getPLugin()->getView('notifications/merge-request-accepted.tpl'), array(
             'author' => User::getById($mr->userId)->username,
             'mrId' => $mr->id
         ));
 
-        $recipients = $mr->getParticipants();
+        $recipients = $mr->getParticipants(array(
+            App::session()->getUser()->id
+        ));
 
-        $email = new Mail();
-        $email  ->subject($subject)
-                ->content($content)
-                ->to(array_map(function($user) {
-                    return $user->email;
-                }, $recipients))
-                ->send();
+        if(!empty($recipients)) {
+            $email = new Mail();
+            $email  ->subject($subject)
+                    ->content($content)
+                    ->to(array_map(function($user) {
+                        return $user->email;
+                    }, $recipients))
+                    ->send();
+        }
 
         return $form->response(Form::STATUS_SUCCESS);
     }

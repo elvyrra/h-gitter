@@ -39,6 +39,7 @@ class RepoController extends Controller {
                 $project->isUserMaster() ?
                     array(
                         'icon' => 'cogs',
+                        'label' => Lang::get($this->_plugin . '.repos-list-project-settings-btn'),
                         'class' => 'btn-info',
                         'href' => App::router()->getUri('h-gitter-edit-project', array('projectId' => $this->projectId)),
                         'target' => 'dialog'
@@ -60,12 +61,13 @@ class RepoController extends Controller {
                     'search' => false,
                     'display' => function($value, $field, $line) {
                         return Icon::make(array(
-                            'icon' => 'pencil',
+                            'icon' => 'cogs',
                             'size' => 'lg',
                             'class' => 'disabled',
                             'href' => App::router()->getUri('h-gitter-edit-repo', array(
                                 'repoId' => $line->id
                             )),
+                            'title' => Lang::get($this->_plugin . '.repos-list-repos-settings-btn'),
                             'target' => 'dialog'
                         ));
                     }
@@ -136,11 +138,6 @@ class RepoController extends Controller {
             ));
         }
 
-        $availableProjects = array_filter(Project::getAll('id'), function($project) {
-            return $project->isUserMaster();
-        });
-
-
         if(!$project->isUserMaster()) {
             throw new ForbiddenException();
         }
@@ -181,12 +178,12 @@ class RepoController extends Controller {
                         ),
                         'disabled' => $this->repoId,
                         'default' => $this->repoId ? true : false,
-                        'label' => Lang::get($this->_plugin . '.edit-repo-existing-repo-label')
+                        'label' => Lang::get($this->_plugin . '.edit-repo-existing-repo-label'),
+                        'labelWidth' => 'auto'
                     )),
 
                     new TextInput(array(
                         'name' => 'name',
-                        'unique' => true,
                         'maxlength' => 64,
                         'label' => Lang::get($this->_plugin . '.edit-repo-name-label'),
                         'pattern' => '/^[^\/]+$/',
@@ -203,20 +200,16 @@ class RepoController extends Controller {
                         'maxlength' => 192,
                         'label' => Lang::get($this->_plugin . '.edit-repo-path-label'),
                         'disabled' => $this->repoId,
-                        'required' => !$this->repoId  && App::request()->getBody('existing-repo'),
+                        'required' => !$this->repoId && App::request()->getBody('existingRepo'),
                         'attributes' => $this->repoId ? array() : array(
                             'e-disabled' => '!existingRepo'
                         ),
                     )),
 
-                    new SelectInput(array(
+                    new HiddenInput(array(
                         'name' => 'projectId',
                         'required' => true,
-                        'default' => $projectId,
-                        'label' => Lang::get($this->_plugin . '.edit-repo-projectId-label'),
-                        'options' => array_map(function($project) {
-                            return $project->name;
-                        }, $availableProjects)
+                        'default' => $projectId
                     )),
 
                     new HWidgets\MarkdownInput(array(
@@ -277,83 +270,120 @@ class RepoController extends Controller {
             'onsuccess' => 'app.dialog("close"); app.lists["h-gitter-repos-list"].refresh();'
         ));
 
-        if(!$form->submitted()) {
-            $this->addJavaScript($this->getPlugin()->getJsUrl('edit-repo.js'));
+        switch($form->submitted()) {
+            case false :
+                $this->addJavaScript($this->getPlugin()->getJsUrl('edit-repo.js'));
 
-            return Dialogbox::make(array(
-                'title' => Lang::get($this->_plugin . '.edit-repo-title'),
-                'icon' => 'git-square',
-                'page' => View::make($this->getPlugin()->getView('edit-repo.tpl'), array(
-                    'form' => $form,
-                    'users' => $users
-                ))
-            ));
-        }
-        elseif($form->submitted() === 'delete') {
-            return $form->delete();
-        }
-        elseif($form->check()) {
-            if(!$repo) {
-                // New repository
-                $repo = new Repo(array(
-                    'projectId' => $form->getData('projectId'),
-                    'ctime' => $form->getData('ctime'),
-                    'description' => $form->getData('description'),
-                    'userId' => App::session()->getUser()->id
+                return Dialogbox::make(array(
+                    'title' => Lang::get($this->_plugin . '.edit-repo-title'),
+                    'icon' => 'git-square',
+                    'page' => View::make($this->getPlugin()->getView('edit-repo.tpl'), array(
+                        'form' => $form,
+                        'users' => $users
+                    ))
                 ));
 
-                if($form->getData('existing-repo')) {
-                    // Create the repository object from an existing Git repository
-                    $repo->path = $form->getData('path');
-                    $repo->name = basename($repo->path);
+            case 'delete' :
+                $form->delete(false);
 
-                    // Check the folder exists and is a git repository
-                    try {
-                        $git = Git::open($repo->path);
-                    }
-                    catch(GitException $e) {
-                        return $form->response(Form::STATUS_CHECK_ERROR, $e->getMessage());
-                    }
-                }
-                else {
-                    // Create the repository
-                    $repo->name = $form->getData('name');
-                    $repo->path = Option::get($this->_plugin . '.default-folder') . '/' . $repo->name;
-
-                    // Check the folder exists and is a git repository
-                    try {
-                        $git = Git::create($repo->path);
-                    }
-                    catch(GitException $e) {
-                        return $form->response(Form::STATUS_CHECK_ERROR, $e->getMessage());
-                    }
+                // Remove the clone repository
+                if(is_dir($repo->getCloneRepoDirname())) {
+                    App::fs()->remove($repo->getCloneRepoDirname());
                 }
 
-
-                // Save the repository object in the database
-                $repo->save();
-
-                $id = $repo->id;
-            }
-            else {
-                if(App::request()->getBody('masters')) {
-                    $form->object->decodedMasters = array_keys(App::request()->getBody('masters'));
+                // Remove the repository if it is managed only under H Gitter
+                if(strpos($repo->path, $this->getPlugin()->getUserfilesDir()) !== false) {
+                    App::fs()->remove($repo->path);
                 }
 
-                $id = $form->register(false);
+                // Remove the avatar filename
+                if(is_file($repo->getAvatarFilename())) {
+                    App::fs()->remove($repo->getAvatarFilename());
+                }
+
+                return $form->response(Form::STATUS_SUCCESS);
+
+            default :
+                if($form->check()) {
+                    if(!$repo) {
+                        $existingRepo = Repo::getByExample(new DBExample(array(
+                            'id' => array(
+                                '$ne' => $this->repoId
+                            ),
+                            'projectId' => $form->getData('projectId'),
+                            'name' => $form->getData('existing-repo') ? basename($form->getData('path')) : $form->getData('name')
+                        )));
+
+                        if($existingRepo) {
+                            $form->error($form->getData('existing-repo') ? 'path' : 'name', Lang::get($this->_plugin . '.edit-repo-same-name-message'));
+                            return $form->response(Form::STATUS_CHECK_ERROR, Lang::get($this->_plugin . '.edit-repo-same-name-message'));
+                        }
+
+                        // New repository
+                        $repo = new Repo(array(
+                            'projectId' => $form->getData('projectId'),
+                            'ctime' => $form->getData('ctime'),
+                            'description' => $form->getData('description'),
+                            'userId' => App::session()->getUser()->id
+                        ));
+
+                        if($form->getData('existing-repo')) {
+                            // Create the repository object from an existing Git repository
+                            $repo->path = $form->getData('path');
+                            $repo->name = basename($repo->path);
+
+                            // Check the folder exists and is a git repository
+                            try {
+                                $git = Git::open($repo->path);
+                                if(!$git->isBare()) {
+                                    throw new \Exception(Lang::get($this->_plugin . '.edit-repo-non-bare-message'));
+                                }
+                            }
+                            catch(\Exception $e) {
+                                return $form->response(Form::STATUS_CHECK_ERROR, $e->getMessage());
+                            }
+                        }
+                        else {
+                            // Create a non existing repository
+                            $repo->name = $form->getData('name');
+                            $repo->path = $project->getDirname() . '/' . $repo->name;
+
+                            // Check the folder exists and is a git repository
+                            try {
+                                $git = Git::create($repo->path);
+                                $git->config('core.bare', 'true');
+                            }
+                            catch(GitException $e) {
+                                return $form->response(Form::STATUS_CHECK_ERROR, $e->getMessage());
+                            }
+                        }
+
+                        // Clone the repository in userfiles
+                        Git::cloneRemote($repo->path, $repo->getCloneRepoDirname());
+
+                        // Save the repository object in the database
+                        $repo->save();
+                    }
+                    else {
+                        if(App::request()->getBody('masters')) {
+                            $form->object->decodedMasters = array_keys(App::request()->getBody('masters'));
+                        }
+
+                        $form->register(false);
+                    }
+
+                    $upload = Upload::getInstance('avatar');
+
+                    if($upload) {
+                        $basename = $repo->getAvatarBasename();
+                        $dirname = $this->getPlugin()->getPublicUserfilesDir();
+
+                        $upload->move($upload->getFile(), $dirname, $basename);
+                    }
+
+                    return $form->response(Form::STATUS_SUCCESS);
+                }
             }
-
-            $upload = Upload::getInstance('avatar');
-
-            if($upload) {
-                $basename = 'repo-avatar-' . $id;
-                $dirname = $this->getPlugin()->getPublicUserfilesDir();
-
-                $upload->move($upload->getFile(), $dirname, $basename);
-            }
-
-            return $form->response(Form::STATUS_SUCCESS);
-        }
     }
 
     /**

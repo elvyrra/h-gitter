@@ -2,6 +2,11 @@
 
 require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
     window.moment = moment;
+
+    // class Discussion extends EMV {
+    //     constructor()
+    // }
+
     /**
      * This class manages the behavior of the merge request
      */
@@ -29,7 +34,9 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
                                     comments : [comment],
                                     commentFormDisplayed : false,
                                     commentFormLoaded : false,
-                                    commentForm : ''
+                                    commentForm : '',
+                                    file : comment.file,
+                                    line : comment.line
                                 });
                             }
                             else {
@@ -48,14 +55,12 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
                         const result = {};
 
                         this.discussions.forEach((discussion) => {
-                            const comment = discussion.comments[0];
-
-                            if(comment.file) {
-                                if(!result[comment.file]) {
-                                    result[comment.file] = {};
+                            if(discussion.file) {
+                                if(!result[discussion.file]) {
+                                    result[discussion.file] = {};
                                 }
 
-                                result[comment.file][comment.line] = discussion;
+                                result[discussion.file][discussion.line] = discussion;
                             }
                         });
 
@@ -77,12 +82,14 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
 
             const newCommentForm = app.forms['h-gitter-merge-request-new-comment-form'];
 
-            newCommentForm.onsuccess = (data) => {
-                this.comments.push(data);
-                this.commentFormDisplayed = false;
+            if(newCommentForm) {
+                newCommentForm.onsuccess = (data) => {
+                    this.comments.push(data);
+                    this.commentFormDisplayed = false;
 
-                newCommentForm.reset();
-            };
+                    newCommentForm.reset();
+                };
+            }
         }
 
         /**
@@ -103,44 +110,41 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
          * @param {int}    line       The code line the comment is applied on
          */
         displayCommentResponseForm(discussion, file, line) {
-            if(!discussion.commentFormLoaded) {
-                const currentRoute = app.getRouteInformationFromUri(app.tabset.activeTab.uri);
-                const wrapper = $('#h-gitter-discussion-response-' + discussion.id);
+            const currentRoute = app.getRouteInformationFromUri(app.tabset.activeTab.uri);
+            const wrapper = $('#h-gitter-discussion-response-' + discussion.id);
 
-                $.get(app.getUri(
-                    'h-gitter-merge-request-comment',
+            $.get(app.getUri(
+                'h-gitter-merge-request-comment',
+                {
+                    repoId : currentRoute.data.repoId,
+                    mergeRequestId : currentRoute.data.mergeRequestId,
+                    commentId : 0
+                },
+                file && line ?
                     {
-                        repoId : currentRoute.data.repoId,
-                        mergeRequestId : currentRoute.data.mergeRequestId,
-                        commentId : 0
-                    },
-                    file && line ?
-                        {
-                            file : file,
-                            line : line
-                        } :
-                        {
-                            parentId : discussion.id
-                        }
-                ))
+                        file : file,
+                        line : line
+                    } :
+                    {
+                        parentId : discussion.id
+                    }
+            ))
 
-                .then((response) => {
-                    discussion.commentForm = response;
+            .then((response) => {
+                discussion.commentForm = response;
 
-                    const formId = wrapper.find('form').attr('id');
+                const formId = wrapper.find('form').attr('id');
 
-                    const form = app.forms[formId];
+                const form = app.forms[formId];
 
-                    discussion.commentFormLoaded = true;
+                form.inputs.content.node().focus();
 
-                    form.inputs.content.node().focus();
+                form.onsuccess = (data) => {
+                    this.comments.push(data);
+                };
 
-                    form.onsuccess = (data) => {
-                        this.comments.push(data);
-                    };
-                });
-            }
-            discussion.commentFormDisplayed = true;
+                discussion.commentFormDisplayed = true;
+            });
         }
 
         /**
@@ -149,17 +153,14 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
          * @param {int}    line       The code line the comment is applied on
          */
         displayDiffCommentForm(file, line) {
-            if(!this.diffDiscussions[file]) {
-                this.diffDiscussions[file] = {};
-            }
-            if(!this.diffDiscussions[file][line]) {
-                this.diffDiscussions[file][line] = {
-                    comments : [],
-                    commentFormLoaded: false,
-                    commentFormDisplayed : false,
-                    commentForm : ''
-                };
-            }
+            this.discussions.push({
+                comments : [],
+                commentFormLoaded: false,
+                commentFormDisplayed : false,
+                commentForm : '',
+                file : file,
+                line : line
+            });
 
             const discussion = this.diffDiscussions[file][line];
 
@@ -211,7 +212,7 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
                     mergeRequestId : currentRoute.data.mergeRequestId,
                     commentId : comment.id
                 }),
-                'method' : 'delete'
+                method : 'delete'
             })
 
             .then(() => {
@@ -235,7 +236,4 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
     window.mrModel = model;
 
     model.$apply(document.getElementById('h-gitter-merge-request'));
-
-
-
 });

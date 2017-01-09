@@ -74,7 +74,7 @@ class Project extends Model {
         $this->decodedPrivileges = array();
 
         if(!empty($this->privileges)) {
-            $this->decodedPrivileges = json_decode($this->privileges, true);
+            $this->decodedPrivileges = json_decode($this->privileges);
         }
     }
 
@@ -96,9 +96,12 @@ class Project extends Model {
             return true;
         }
 
-        if(isset($this->decodedPrivileges[$user->id])) {
-            return true;
+        foreach($this->decodedPrivileges as $privileges) {
+            if($privileges->userId === $user->id) {
+                return true;
+            }
         }
+
 
         return false;
     }
@@ -117,8 +120,10 @@ class Project extends Model {
             return true;
         }
 
-        if(!empty($this->decodedPrivileges[$user->id]['master'])) {
-            return true;
+        foreach($this->decodedPrivileges as $privileges) {
+            if($privileges->userId === $user->id && !empty($privileges->master)) {
+                return true;
+            }
         }
 
         return false;
@@ -130,11 +135,33 @@ class Project extends Model {
      * @return array
      */
     public function getUsers() {
+        if(empty($this->decodedPrivileges)) {
+            return array();
+        }
         return User::getListByExample(new DBExample(array(
             'id' => array(
-                '$in' => array_merge(array_keys($this->decodedPrivileges), array($this->userId))
+                '$in' => array_map(function($privileges) {
+                    return $privileges->userId;
+                }, $this->decodedPrivileges)
             ),
         )));
+    }
+
+
+    /**
+     * Get the basename of the project avatar
+     * @return string
+     */
+    public function getAvatarBasename() {
+        return 'project-avatar-' . $this->id;
+    }
+
+    /**
+     * Get the full path of the project avatar
+     * @return string
+     */
+    public function getAvatarFilename() {
+        return Plugin::current()->getPublicUserfilesDir() . $this->getAvatarBasename();
     }
 
     /**
@@ -142,13 +169,20 @@ class Project extends Model {
      * @return string
      */
     public function getAvatarUrl() {
-        $basename = 'project-avatar-' . $this->id;
         $plugin = Plugin::current();
 
-        if(is_file($plugin->getPublicUserfilesDir() . $basename)) {
-            return $plugin->getUserfilesUrl($basename);
+        if(is_file($this->getAvatarFilename())) {
+            return $plugin->getUserfilesUrl($this->getAvatarBasename());
         }
 
         return '';
+    }
+
+    /**
+     * Get the folder containing the folder repositories
+     * @return string
+     */
+    public function getDirname() {
+        return Plugin::current()->getUserfile('project-' . $this->id);
     }
 }

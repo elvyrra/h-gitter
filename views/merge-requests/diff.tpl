@@ -25,20 +25,20 @@
                     <tr class="{{ $line['type'] }} {{ $line['type'] === 'addition' ? 'alert-success' : ($line['type'] === 'deletion' ? 'alert-danger' : '')}}">
                         <td class="prev-line-number">
                             {if($line['rightLineNumber'])}
-                                <i class="icon icon-comments-o icon-lg open-comment-form pointer"
+                                <!-- <i class="icon icon-comments-o icon-lg open-comment-form pointer"
                                     e-click="function(self, event) {$root.displayDiffCommentForm('{{ $filename }}', '{{ $line['rightLineNumber'] }}', event); }"
-                                    e-show="!diffDiscussions['{{ $filename }}'] || !diffDiscussions['{{ $filename }}']['{{ $line['rightLineNumber'] }}']" ></i>
+                                    e-show="!diffDiscussions['{{ $filename }}'] || !diffDiscussions['{{ $filename }}']['{{ $line['rightLineNumber'] }}']" ></i> -->
                             {/if}
                             {{ $line['leftLineNumber'] }}
                         </td>
                         <td class="new-line-number">{{ $line['rightLineNumber'] }}</td>
                         <td class="code" id="{{uniqid()}}" e-ace="{language : '{{ $fileDiffs['extension'] }}', readonly : true, theme : 'monokai'}">{{{ $line['code'] }}}</td>
                     </tr>
-                    <tr class="merge-request-diff-comment" e-with="{$data : $root.diffDiscussions['{{ $filename }}']['{{ $line['rightLineNumber'] }}'], $as : 'discussion'}">
+                    <!-- <tr class="merge-request-diff-comment" e-with="{$data : $root.diffDiscussions['{{ $filename }}']['{{ $line['rightLineNumber'] }}'], $as : 'discussion'}">
                         <td colspan="3">
                             <div e-template="'merge-request-discussion'"></div>
                         </td>
-                    </tr>
+                    </tr> -->
                 </tr>
                 {/foreach}
             {/foreach}

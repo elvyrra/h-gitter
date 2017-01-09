@@ -400,7 +400,7 @@ class Git {
      * @param string $branch
      * @return string
      */
-    public function pull($remote = 'origin', $branch) {
+    public function pull($remote = 'origin', $branch = '') {
         if(!$branch) {
             $branch = $this->getActiveBranch();
         }
@@ -442,7 +442,12 @@ class Git {
         return $this->run("show $version:$file");
     }
 
-
+    /**
+     * Display the content of a folder
+     * @param  string $folder  The folder to get the content
+     * @param  string $version The version
+     * @return string
+     */
     public function ls($folder = '', $version = 'HEAD') {
         if($folder) {
             return $this->run("ls-tree $version:$folder");
@@ -450,5 +455,37 @@ class Git {
         else {
             return $this->run("ls-tree $version");
         }
+    }
+
+    /**
+     * Get a config property vlaue / Set a config property
+     * @param  string $prop  The configuration property
+     * @param  string $value The value to set. If not set, the function will return the current value of the property
+     * @return string        Returns the value of the property
+     */
+    public function config($prop, $value = null) {
+        if($value === null) {
+            return trim($this->run('config ' . $prop));
+        }
+
+        $this->run('config ' . $prop . ' ' . $value);
+
+        return $value;
+    }
+
+    /**
+     * Check if the repository is a bare repository
+     * @return boolean
+     */
+    public function isBare() {
+        return $this->config('core.bare') === 'true';
+    }
+
+    /**
+     * Downlaod objects and refs from a remote repo
+     * @param string $origin The origin repository to fetch the references and objects
+     */
+    public function fetch($origin = 'origin') {
+        $this->run('fetch ' . $origin);
     }
 }

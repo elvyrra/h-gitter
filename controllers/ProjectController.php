@@ -33,12 +33,13 @@ class ProjectController extends Controller {
                         }
 
                         return Icon::make(array(
-                            'icon' => 'pencil',
+                            'icon' => 'cogs',
                             'size' => 'lg',
                             'class' => 'disabled',
                             'href' => App::router()->getUri('h-gitter-edit-project', array(
                                 'projectId' => $project->id
                             )),
+                            'title' => Lang::get($this->_plugin . '.repos-list-project-settings-btn'),
                             'target' => 'dialog'
                         ));
                     },
@@ -204,7 +205,7 @@ class ProjectController extends Controller {
 
                     new HiddenInput(array(
                         'name' => 'privileges',
-                        'default' => '{}',
+                        'default' => '[]',
                         'attributes' => array(
                             'e-value' => 'privileges.toString()'
                         )
@@ -254,32 +255,51 @@ class ProjectController extends Controller {
             'onsuccess' => 'app.dialog("close"); app.lists["h-gitter-projects-list"] && app.lists["h-gitter-projects-list"].refresh();'
         ));
 
-        if(!$form->submitted()) {
-            $this->addJavaScript($this->getPlugin()->getJsUrl('edit-project.js'));
-            $this->addCss($this->getPlugin()->getCssUrl('edit-project.less'));
+        switch($form->submitted()) {
+            case false :
+                $this->addJavaScript($this->getPlugin()->getJsUrl('edit-project.js'));
+                $this->addCss($this->getPlugin()->getCssUrl('edit-project.less'));
 
-            $this->addKeysToJavascript(
-                $this->_plugin . '.remove-project-user-confirm'
-            );
+                $this->addKeysToJavascript(
+                    $this->_plugin . '.remove-project-user-confirm'
+                );
 
-            return Dialogbox::make(array(
-                'title' => Lang::get($this->_plugin . '.edit-project-title', null, $this->projectId),
-                'icon' => 'git-square',
-                'page' => $form->display()
-            ));
-        }
-        else {
-            $id = $form->treat(false);
-            $upload = Upload::getInstance('avatar');
+                return Dialogbox::make(array(
+                    'title' => Lang::get($this->_plugin . '.edit-project-title', null, $this->projectId),
+                    'icon' => 'git-square',
+                    'page' => $form->display()
+                ));
 
-            if($upload) {
-                $basename = 'project-avatar-' . $id;
-                $dirname = $this->getPlugin()->getPublicUserfilesDir();
+            case 'delete' :
+                $form->delete(false);
 
-                $upload->move($upload->getFile(), $dirname, $basename);
-            }
+                // remove the folder of the project
+                App::fs()->remove($project->getDirname());
 
-            return $form->response(Form::STATUS_SUCCESS);
+                // Remove the avatar filename if exists
+                if(is_file($project->getAvatarFilename())) {
+                    App::fs()->remove($project->getAvatarFilename());
+                }
+
+                return $form->response(Form::STATUS_SUCCESS);
+
+            default :
+                $id = $form->treat(false);
+                $upload = Upload::getInstance('avatar');
+
+                if($upload) {
+                    $basename = $form->object->getAvatarBasename();
+                    $dirname = $this->getPlugin()->getPublicUserfilesDir();
+
+                    $upload->move($upload->getFile(), $dirname, $basename);
+                }
+
+                if(!$project) {
+                    $folderName = 'project-' . $id;
+                    // Create the folder for the project in the plugin userfiles folder
+                    mkdir($this->getPlugin()->getUserfile($folderName));
+                }
+                return $form->response(Form::STATUS_SUCCESS);
         }
     }
 }

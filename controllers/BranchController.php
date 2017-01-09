@@ -112,7 +112,8 @@ class BranchController extends Controller {
                                         array(
                                             'branch' => $branch->name
                                         )
-                                    )
+                                    ),
+                                    'target' => 'dialog'
                                 ));
                             }
                         }

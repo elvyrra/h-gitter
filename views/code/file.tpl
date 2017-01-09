@@ -20,7 +20,7 @@
 
     {assign name="content"}
         <textarea class="hidden" id="h-gitter-file-content">{{{ $fileContent }}}</textarea>
-        <div id="h-gitter-file-content-ace" e-ace="{language : '{{ $extension }}', readonly: true, value : content, maxLines : Infinity }"></div>
+        <div id="h-gitter-file-content-ace" e-ace="{language : '{{ $extension }}', readonly: true, value : content, maxLines : Infinity, theme : 'monokai' }"></div>
     {/assign}
 
     {panel type="info" icon="file-o" title="{$basename}" content="{$content}"}

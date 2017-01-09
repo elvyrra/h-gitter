@@ -155,13 +155,27 @@
         font-family: monospace;
     }
 
+    tr.addition, tr.deletion {
+        > .code:before {
+            width: 1rem;
+            text-align: center;
+        }
+    }
+
     tr.addition {
+        > .code:before {
+            content : "+";
+        }
+
         .ace_layer.ace_text-layer {
             background-color: #355435;
         }
     }
 
     tr.deletion {
+        > .code:before {
+            content : "-";
+        }
         .ace_layer.ace_text-layer {
             background-color: #734a4a;
         }
@@ -188,8 +202,9 @@
         }
 
         &.code {
-            padding-left: .5rem;
-
+            .ace_scroller {
+                margin-left: 1rem;
+            }
             .ace_gutter {
                 display: none;
             }
