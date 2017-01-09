@@ -484,12 +484,20 @@ class Repo extends Model {
         return array();
     }
 
+    /**
+     * Get the basename of the repo avatar
+     * @return string
+     */
     public function getAvatarBasename() {
         return 'repo-avatar-' . $this->id;
     }
 
+    /**
+     * Get the full path of the repo avatar
+     * @return string 
+     */
     public function getAvatarFilename() {
-        Plugin::current()->getPublicUserfilesDir() . $this->getAvatarBasename();
+        return Plugin::current()->getPublicUserfilesDir() . $this->getAvatarBasename();
     }
 
     /**
