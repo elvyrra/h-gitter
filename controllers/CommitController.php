@@ -3,14 +3,27 @@
 namespace Hawk\Plugins\HGitter;
 
 class CommitController extends Controller {
+    const MAX_LIST_ITEMS = 50;
+
     /**
      * Display the list of the commits of a repository, on a given branch
      * @returns string The HTML response
      */
     public function index() {
         $repo = Repo::getById($this->repoId);
+        $start = App::request()->getParams('start');
+        $end = $start + self::MAX_LIST_ITEMS;
+        $maxCommits = $repo->run('rev-list --count ' . $this->revision);
 
-        $hashes = array_map('trim', explode(PHP_EOL, $repo->run('log --pretty="format:%H" ' . $this->revision . ' --')));
+        $cmd = 'log --pretty="format:%H"';
+
+        if($start) {
+            $cmd .= ' --skip=' . $start;
+        }
+
+        $cmd .= ' --max-count=' . self::MAX_LIST_ITEMS . ' ' . $this->revision . ' --';
+
+        $hashes = array_map('trim', explode(PHP_EOL, $repo->run($cmd)));
 
         $commits = array_map(function($hash) use($repo) {
             $commit = $repo->getCommitInformation($hash);
@@ -20,10 +33,6 @@ class CommitController extends Controller {
 
             return $commit;
         }, $hashes);
-
-        usort($commits, function($commit1, $commit2) {
-            return $commit2->date - $commit1->date;
-        });
 
         $byDayCommits = array();
 
@@ -37,14 +46,28 @@ class CommitController extends Controller {
             $byDayCommits[$formattedDate][] = $commit;
         }
 
-        $content = View::make($this->getPlugin()->getView('commits/list.tpl'), array(
-            'repo' => $repo,
-            'allCommits' => $byDayCommits
-        ));
+        if(!$start) {
+            $this->addJavaScript($this->getPlugin()->getJsUrl('commits.js'));
 
-        return RepoController::getInstance(array(
-            'repoId' => $this->repoId
-        ))->display('commits', $content);
+
+            $content = View::make($this->getPlugin()->getView('commits/list.tpl'), array(
+                'repo' => $repo,
+                'allCommits' => $byDayCommits,
+                'maxCommits' => $maxCommits,
+                'end' => $end
+            ));
+
+            return RepoController::getInstance(array(
+                'repoId' => $this->repoId
+            ))->display('commits', $content);
+        }
+
+        return  View::make($this->getPlugin()->getView('commits/list-items.tpl'), array(
+            'repo' => $repo,
+            'allCommits' => $byDayCommits,
+            'maxCommits' => $maxCommits,
+            'end' => $end
+        ));
     }
 
 

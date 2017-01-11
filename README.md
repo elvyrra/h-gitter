@@ -35,3 +35,7 @@ This plugin depends on the plugins :
 This plugin is devloped by the company Elvyrra
 
 ©Elvyrra S.A.S
+
+# Changeset :
+## V2.0.1
+* Lazy loading on the list of commits in a repository

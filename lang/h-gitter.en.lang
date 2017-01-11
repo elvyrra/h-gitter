@@ -86,6 +86,7 @@ repo-code-branch-label = "Branch : "
 repo-commits-date-separator = "Commits on {date}"
 repo-commits-time-and-author = "By {author} at {time}"
 repo-commits-browse-files = "Browse files"
+repo-commits-load-more = "See more commits"
 
 ; Commit details
 commit-commited-by = "Commit by <b>{author}</b> on {date}"
