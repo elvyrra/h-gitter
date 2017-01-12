@@ -127,6 +127,17 @@ new-branch-form-name-already-exists = "This branch already exists"
 ; Branches comparison
 branch-comparison-title = "Comparing : "
 
+; Tags list
+new-tag-btn = "New tag"
+delete-tag-title = "Delete"
+confirm-delete-tag = "Do you really want to remove this tag ?"
+
+; New tag form
+new-tag-form-title = "New tag"
+new-tag-name-label = "Tag name"
+new-tag-branch-label = "The branch to apply the tag on"
+existing-tag-message = "This tag already exists on this repository"
+
 ; Merge requests list
 new-merge-request-btn = "New merge request"
 mr-list-opend-by = "Opened {date} by {username}"
@@ -163,6 +174,7 @@ score-comment = "{username} scored {score}"
 
 ; Issues list
 issue-new-btn = "New issue"
+create-branch-from-issue-btn = "Create branch"
 
 
 ; Notifications

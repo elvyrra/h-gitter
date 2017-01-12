@@ -390,7 +390,7 @@ class RepoController extends Controller {
      * display the content of a repository
      * @returns string The HTML result
      */
-    public function display($section = 'home', $sectionContent = '') {
+    public function display($section = 'home', $sectionContent = '', $widgets = array()) {
         $repo = Repo::getById($this->repoId);
 
         $menuItems = array(
@@ -466,6 +466,10 @@ class RepoController extends Controller {
         $this->addJavaScript($this->getPlugin()->getJsUrl('repository.js'));
         $this->addCss($this->getPlugin()->getCssUrl('repository.less'));
 
+        array_unshift($widgets, RepositoryPageWidget::getInstance(array(
+            'id' => $repo->id
+        )));
+
         return LeftSidebarTab::make(array(
             'title' => Lang::get($this->_plugin . '.repo-index-title', array(
                 'repo' => $repo->name
@@ -475,11 +479,7 @@ class RepoController extends Controller {
                 'content' => $content
             ),
             'sidebar' => array(
-                'widgets' => array(
-                    RepositoryPageWidget::getInstance(array(
-                        'id' => $repo->id
-                    ))
-                )
+                'widgets' => $widgets
             )
         ));
     }

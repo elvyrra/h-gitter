@@ -40,6 +40,7 @@ class IssueController extends Controller {
     public function index() {
         $this->init();
         $users = array();
+
         foreach($this->_repo->getUsers() as $user) {
             $users[$user->id] = $user;
         }
@@ -49,12 +50,21 @@ class IssueController extends Controller {
             $status[$option->id] = $option->label;
         }
 
+        $filters = IssueFilterWidget::getInstance()->getFilters();
+        $filter = array(
+            'projectId' => $this->_project->id
+        );
+
+        if(!empty($filters['status'])) {
+            $filter['status'] = array(
+                '$in' => array_keys($filters['status'])
+            );
+        }
+
         $param = array(
             'id' => 'h-gitter-issues-list',
             'model' => '\Hawk\Plugins\HTracker\Ticket',
-            'filter' => new DBExample(array(
-                'projectId' => $this->_project->id
-            )),
+            'filter' => new DBExample($filter),
             'reference' => 'id',
             'controls' => array(
                  array(
@@ -130,22 +140,33 @@ class IssueController extends Controller {
                 'status' => array(
                     'label' => Lang::get('h-tracker.ticket-list-status-label'),
                     'search' => false,
-                    'sort' => false,
                     'display' => function ($value) use ($status) {
                         return isset($status[$value]) ? $status[$value] : '';
                     },
                 ),
 
-                // 'deadLine' => array(
-                //     'label'   => Lang::get($this->_plugin . '.ticket-list-deadline-label'),
-                //     'display' => function ($value, $field) {
-                //         return date(Lang::get('main.date-format'), strtotime($value));
-                //     },
-                //     'search'  => array(
-                //         'type' => 'date'
-                //     )
-                // ),
+                'actions' => array(
+                    'independant' => true,
+                    'display' => function($value, $field, $issue) {
+                        $defaultName = 'h-gitter-issue-' . $issue->id;
 
+                        return ButtonInput::getInstance(array(
+                            'value' => Lang::get($this->_plugin . '.create-branch-from-issue-btn'),
+                            'icon' => 'code-fork',
+                            'href' => App::router()->getUri(
+                                'h-gitter-repo-branch', 
+                                array(
+                                    'repoId' => $this->repoId,
+                                    'branch' => '$'
+                                ),
+                                array(
+                                    'name' => $defaultName
+                                )
+                            ),
+                            'target' => 'dialog'
+                        ));
+                    }
+                )
             )
         );
 
@@ -160,7 +181,7 @@ class IssueController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('issues', $content);
+        ))->display('issues', $content, array(IssueFilterWidget::getInstance()));
 
     }
 

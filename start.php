@@ -140,8 +140,13 @@ App::router()->auth(App::session()->isAllowed('h-gitter.access-plugin'), functio
                 /**
                  * Tags
                  */
-                App::router()->get('h-gitter-repo-tags', '/tags', array(
+                App::router()->get('h-gitter-repo-tags', '/tags', array (
                     'action' => 'TagController.index'
+                ));
+
+                // Create / delete a tag
+                App::router()->any('h-gitter-repo-tag', '/tags/{tag}', array(
+                    'action' => 'TagController.edit'
                 ));
 
                 /**

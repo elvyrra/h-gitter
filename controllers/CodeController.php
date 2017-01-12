@@ -16,7 +16,7 @@ class CodeController extends Controller {
 
         if($this->type === 'tag') {
             // Get the commit of the tag
-            $revision = trim($repo->run('log -n 1 --pretty="format:%H" --tags="' . $this->revision . '"'));
+            $revision = trim($repo->run('rev-list -n 1 ' . $this->revision));
         }
 
         $tree = explode(PHP_EOL, $repo->ls($this->path, $revision));
@@ -31,7 +31,7 @@ class CodeController extends Controller {
 
                 $path = ($this->path ? $this->path : '.') . '/' . $basename;
 
-                $commitHash = trim($repo->run('log --format="%H" -n 1 -- ' . $path));
+                $commitHash = trim($repo->run('log --format="%H" -n 1 ' . $revision . ' -- ' . $path));
                 $commit = $repo->getCommitInformation($commitHash);
 
                 $elements[] = (object) array(
@@ -132,7 +132,7 @@ class CodeController extends Controller {
 
         if($this->type === 'tag') {
             // Get the commit of the tag
-            $revision = trim($repo->run('log  -n 1 --pretty="format:%H" --tags="' . $this->revision . '"'));
+            $revision = trim($repo->run('rev-list -n 1 ' . $revision));
         }
 
         $fileContent = $repo->show($this->path, $revision);

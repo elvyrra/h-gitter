@@ -37,5 +37,12 @@ This plugin is devloped by the company Elvyrra
 ©Elvyrra S.A.S
 
 # Changeset :
-## V2.0.1
+## v2.0.1
 * Lazy loading on the list of commits in a repository
+
+## v2.1.0
+* Close an issue if a merge request has '#<id>' in it title, id being the id of the issue
+* Create a tag on a given branch
+* Create a branch from an issue
+* Bug: The assignee is not displayed in the list of issues
+* Sort and filter issues by status

@@ -3,6 +3,9 @@
 namespace Hawk\Plugins\HGitter;
 
 class BranchController extends Controller {
+    /**
+     * Diplay the list of the repositories branches
+     */
     public function index() {
         $repo = Repo::getById($this->repoId);
 
@@ -148,6 +151,8 @@ class BranchController extends Controller {
     public function edit() {
         $repo = Repo::getById($this->repoId);
 
+        $inDialog = App::request()->getParams('_dialog');
+
         $branches = $repo->getBranches();
 
         $form = new Form(array(
@@ -160,6 +165,7 @@ class BranchController extends Controller {
                 new TextInput(array(
                     'name' => 'name',
                     'required' => true,
+                    'default' => App::request()->getParams('name'),
                     'label' => Lang::get($this->_plugin . '.new-branch-form-name-label')
                 )),
 
@@ -169,19 +175,28 @@ class BranchController extends Controller {
                     'default' => 'master',
                     'options' => array_combine($branches, $branches),
                     'label' => Lang::get($this->_plugin . '.new-branch-form-from-label'),
-                    'nl' => false
+                    'nl' => $inDialog
                 )),
 
                 new SubmitInput(array(
                     'name' => 'submit',
+                    'nl' => $inDialog,
                     'value' => Lang::get($this->_plugin . '.new-branch-form-submit-label')
                 ))
             ),
-            'onsuccess' => 'app.tabset.activeTab.reload();'
+            'onsuccess' => $inDialog ? 'app.dialog("close")' : 'app.tabset.activeTab.reload();'
         ));
 
         switch($form->submitted()) {
             case false :
+                if($inDialog) {
+                    return Dialogbox::make(array(
+                        'title' => Lang::get($this->_plugin . '.new-branch-form-title'),
+                        'icon' => 'code-fork',
+                        'page' => $form->display()
+                    ));
+                }
+
                 return $form->display();
 
             case 'delete' :

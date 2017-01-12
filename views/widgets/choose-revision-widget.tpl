@@ -8,7 +8,7 @@
             <input type="hidden" name="path" value="{{ $path }}" />
             <input type="text"
                 placeholder="{text key='h-gitter.choose-revision-widget-placeholder'}"
-                e-autocomplete="{source : options, minLength : 0, search : 'value', value : 'value', change : choose}" />
+                e-autocomplete="{source : options, minLength : 0, search : 'value', value : 'value', change : choose, categorized : true}" />
 
         {/assign}
 

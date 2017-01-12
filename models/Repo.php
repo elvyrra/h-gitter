@@ -494,7 +494,7 @@ class Repo extends Model {
 
     /**
      * Get the full path of the repo avatar
-     * @return string 
+     * @return string
      */
     public function getAvatarFilename() {
         return Plugin::current()->getPublicUserfilesDir() . $this->getAvatarBasename();

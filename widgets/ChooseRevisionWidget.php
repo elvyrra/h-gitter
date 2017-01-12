@@ -35,11 +35,10 @@ class ChooseRevisionWidget extends Widget {
         if(empty($this->noBranches)) {
             $options = array_merge($options, array_map(function($branch) {
                 return array(
+                    'category' => 'Branch',
                     'type' => 'branch',
                     'value' => $branch,
-                    'label' => Lang::get($this->_plugin . '.choose-revision-widget-branch', array(
-                        'revision' => $branch
-                    ))
+                    'label' => $branch
                 );
             }, $branches));
         }
@@ -47,11 +46,10 @@ class ChooseRevisionWidget extends Widget {
         if(empty($this->noTags)) {
             $options = array_merge($options, array_map(function($tag) {
                 return array(
+                    'category' => 'Tag',
                     'type' => 'tag',
                     'value' => $tag,
-                    'label' => Lang::get($this->_plugin . '.choose-revision-widget-tag', array(
-                        'revision' => $tag
-                    ))
+                    'label' => $tag
                 );
             }, $tags));
         }

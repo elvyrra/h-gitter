@@ -2,6 +2,8 @@
 
 namespace Hawk\Plugins\HGitter;
 
+use \Hawk\Plugins\HTracker as HTracker;
+
 class MergeRequestController extends Controller {
     /**
      * Display the list of the merge requests on the repository
@@ -510,6 +512,7 @@ class MergeRequestController extends Controller {
         ));
 
         if(!$form->submitted() && $repo->isUserMaster()) {
+            // Display the merge request
             return $form->display();
         }
 
@@ -562,6 +565,21 @@ class MergeRequestController extends Controller {
                         return $user->email;
                     }, $recipients))
                     ->send();
+        }
+
+        // Check if an issue is attached to this merge request, and in this case, close it
+        if(preg_match_all('/\#(\d+)(?:\b|$)/', $mr->title, $matches, PREG_SET_ORDER)) {
+            foreach($matches as $match) {
+                $issueId = $match[1];
+                $issue = HTracker\Ticket::getById($issueId);
+
+                if($issue) {
+                    // An issue is attached to the merge request, close it
+                    $issue->status = HTracker\Ticket::STATUS_CLOSED_ID;
+
+                    $issue->save();
+                }
+            }
         }
 
         return $form->response(Form::STATUS_SUCCESS);

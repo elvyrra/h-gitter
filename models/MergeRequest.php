@@ -163,12 +163,13 @@ class MergeRequest extends Model{
                 $clone->run('merge --no-commit --no-ff ' . $this->from);
             }
             catch(GitException $e) {
-                Utils::debug($e->getMessage());
                 $conflicts = true;
             }
 
-            $clone->run('merge --abort');
-
+            try {
+                $clone->run('merge --abort');
+            }
+            catch(GitException $e) {}
 
             if($currentBranch !== $this->to) {
                 $clone->checkout($currentBranch);

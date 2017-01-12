@@ -136,13 +136,19 @@ class Project extends Model {
      */
     public function getUsers() {
         if(empty($this->decodedPrivileges)) {
-            return array();
+            $ids = array();
         }
+        else {
+            $ids = array_map(function($privileges) {
+                return $privileges->userId;
+            }, $this->decodedPrivileges);
+        }
+
+        $ids[] = $this->userId;
+
         return User::getListByExample(new DBExample(array(
             'id' => array(
-                '$in' => array_map(function($privileges) {
-                    return $privileges->userId;
-                }, $this->decodedPrivileges)
+                '$in' => array_unique($ids)
             ),
         )));
     }

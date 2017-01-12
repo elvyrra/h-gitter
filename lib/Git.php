@@ -336,12 +336,12 @@ class Git {
      *
      * Accepts the name for the tag and the message
      *
-     * @param string $tag
-     * @param string $message
+     * @param string $tag       The name of the tag to create
+     * @param string $revision  The revision name to apply the tag on
      * @return string
      */
-    public function tag($tag) {
-        return $this->run('tag ' . $tag);
+    public function tag($tag, $revision = '') {
+        return $this->run('tag ' . $tag . ' ' . $revision);
     }
 
     /**
