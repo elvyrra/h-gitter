@@ -3,6 +3,7 @@
 namespace Hawk\Plugins\HGitter;
 
 use Hawk\Plugins\HWidgets as HWidgets;
+use Hawk\Plugins\HTracker as HTracker;
 
 class RepoController extends Controller {
     /**
@@ -60,16 +61,18 @@ class RepoController extends Controller {
                     'sort' => false,
                     'search' => false,
                     'display' => function($value, $field, $line) {
-                        return Icon::make(array(
-                            'icon' => 'cogs',
-                            'size' => 'lg',
-                            'class' => 'disabled',
-                            'href' => App::router()->getUri('h-gitter-edit-repo', array(
-                                'repoId' => $line->id
-                            )),
-                            'title' => Lang::get($this->_plugin . '.repos-list-repos-settings-btn'),
-                            'target' => 'dialog'
-                        ));
+                        if($line->isUserMaster()) {
+                            return Icon::make(array(
+                                'icon' => 'cogs',
+                                'size' => 'lg',
+                                'class' => 'disabled',
+                                'href' => App::router()->getUri('h-gitter-edit-repo', array(
+                                    'repoId' => $line->id
+                                )),
+                                'title' => Lang::get($this->_plugin . '.repos-list-repos-settings-btn'),
+                                'target' => 'dialog'
+                            ));
+                        }
                     }
                 ),
                 'name' => array(
@@ -138,7 +141,7 @@ class RepoController extends Controller {
             ));
         }
 
-        if(!$project->isUserMaster()) {
+        if(!$repo->isUserMaster()) {
             throw new ForbiddenException();
         }
 
@@ -418,7 +421,9 @@ class RepoController extends Controller {
             ),
             'issues' => PLugin::get('h-tracker') ? array(
                 'icon' => 'bug',
-                'number' => count($repo->getIssues()),
+                'number' => count(array_filter($repo->getIssues(), function($issue) {
+                    return (int) $issue->status !== HTracker\Ticket::STATUS_CLOSED_ID;
+                })),
                 'url' => App::router()->getUri('h-gitter-repo-issues', array('repoId' => $repo->id))
             ) : null,
             'merge-requests' => array(

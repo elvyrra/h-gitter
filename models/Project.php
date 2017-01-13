@@ -97,7 +97,7 @@ class Project extends Model {
         }
 
         foreach($this->decodedPrivileges as $privileges) {
-            if($privileges->userId === $user->id) {
+            if($privileges->userId === (int) $user->id) {
                 return true;
             }
         }
@@ -121,7 +121,7 @@ class Project extends Model {
         }
 
         foreach($this->decodedPrivileges as $privileges) {
-            if($privileges->userId === $user->id && !empty($privileges->master)) {
+            if($privileges->userId === (int) $user->id && !empty($privileges->master)) {
                 return true;
             }
         }

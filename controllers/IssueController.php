@@ -148,23 +148,27 @@ class IssueController extends Controller {
                 'actions' => array(
                     'independant' => true,
                     'display' => function($value, $field, $issue) {
-                        $defaultName = 'h-gitter-issue-' . $issue->id;
+                        if($issue->status === HTracker\Ticket::STATUS_NEW_ID) {
+                            $defaultName = 'h-gitter-issue-' . $issue->id;
 
-                        return ButtonInput::getInstance(array(
-                            'value' => Lang::get($this->_plugin . '.create-branch-from-issue-btn'),
-                            'icon' => 'code-fork',
-                            'href' => App::router()->getUri(
-                                'h-gitter-repo-branch', 
-                                array(
-                                    'repoId' => $this->repoId,
-                                    'branch' => '$'
+                            return ButtonInput::getInstance(array(
+                                'value' => Lang::get($this->_plugin . '.create-branch-from-issue-btn'),
+                                'icon' => 'code-fork',
+                                'href' => App::router()->getUri(
+                                    'h-gitter-repo-branch',
+                                    array(
+                                        'repoId' => $this->repoId,
+                                        'branch' => '$'
+                                    ),
+                                    array(
+                                        'name' => $defaultName
+                                    )
                                 ),
-                                array(
-                                    'name' => $defaultName
-                                )
-                            ),
-                            'target' => 'dialog'
-                        ));
+                                'target' => 'dialog'
+                            ));
+                        }
+
+                        return '';
                     }
                 )
             )
