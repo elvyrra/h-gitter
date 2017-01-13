@@ -81,18 +81,16 @@ class RepoController extends Controller {
                         return App::router()->getUri('h-gitter-display-repo', array('repoId' => $repo->id));
                     },
                     'display' => function($value, $field, $repo) {
+                        $description = Parsedown::instance()->text($repo->description);
+
                         return HWidgets\MetaData::getInstance(array(
                             'avatar' => $repo->getAvatarUrl(),
                             'name' => $repo->name,
                             'meta' => $repo->name,
-                            'description' => substr($repo->description, 0, 300),
+                            'description' => $description,
                             'size' => 'small'
                         ))->display();
                     }
-                ),
-
-                'description' => array(
-                    'label' => Lang::get($this->_plugin . '.repos-list-description-label')
                 ),
 
                 'mtime' => array(

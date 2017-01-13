@@ -63,7 +63,7 @@ class ProjectController extends Controller {
                             'avatar' => $project->getAvatarUrl(),
                             'name' => $project->name,
                             'meta' => $project->name,
-                            'description' => $project->description . '<br />' . $description,
+                            'description' => Parsedown::instance()->text($project->description) . $description,
                             'size' => 'small'
                         ))->display();
                     }

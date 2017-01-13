@@ -37,10 +37,12 @@ This plugin is devloped by the company Elvyrra
 ©Elvyrra S.A.S
 
 # Changeset :
-## v2.1.1
+
+## v2.1.1.1
 * Fix bugs on projects and repositories privileges
 * Display only the number of open issues
 * Add the button to create a branch from an issue only for new issues
+* Display HTML version of repository / project in the list
 
 ## v2.1.0
 * Close an issue if a merge request has '#<id>' in it title, id being the id of the issue

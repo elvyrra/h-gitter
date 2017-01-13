@@ -147,8 +147,10 @@ class IssueController extends Controller {
 
                 'actions' => array(
                     'independant' => true,
+                    'search' => false,
+                    'sort' => false,
                     'display' => function($value, $field, $issue) {
-                        if($issue->status === HTracker\Ticket::STATUS_NEW_ID) {
+                        if((int) $issue->status === HTracker\Ticket::STATUS_NEW_ID) {
                             $defaultName = 'h-gitter-issue-' . $issue->id;
 
                             return ButtonInput::getInstance(array(
