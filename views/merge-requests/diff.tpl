@@ -32,7 +32,7 @@
                             {{ $line['leftLineNumber'] }}
                         </td>
                         <td class="new-line-number">{{ $line['rightLineNumber'] }}</td>
-                        <td class="code" id="{{uniqid()}}" e-ace="{language : '{{ $fileDiffs['extension'] }}', readonly : true, theme : 'monokai'}">{{{ $line['code'] }}}</td>
+                        <td class="code" id="{{uniqid()}}">{{{ $line['code'] }}}</td>
                     </tr>
                     <!-- <tr class="merge-request-diff-comment" e-with="{$data : $root.diffDiscussions['{{ $filename }}']['{{ $line['rightLineNumber'] }}'], $as : 'discussion'}">
                         <td colspan="3">
