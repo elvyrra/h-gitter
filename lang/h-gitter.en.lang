@@ -46,6 +46,10 @@ repos-list-name-label = "Repository name"
 repos-list-repos-settings-btn = "Repository settings"
 repos-list-description-label = "Description"
 repos-list-mtime-label = "Last modification"
+repos-list-info-members[s] = "{number} member"
+repos-list-info-members[p] = "{number} members"
+repos-list-info-merge-requests[s] = "{number} merge request"
+repos-list-info-merge-requests[p] = "{number} merge requests"
 
 ; Reporitory edition
 edit-repo-title = "Create / Edit a reporitory "

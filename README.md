@@ -38,11 +38,13 @@ This plugin is devloped by the company Elvyrra
 
 # Changeset :
 
-## v2.1.1.1
+## v2.1.1
 * Fix bugs on projects and repositories privileges
 * Display only the number of open issues
 * Add the button to create a branch from an issue only for new issues
 * Display HTML version of repository / project in the list
+* Fix bug : users was not added to merge requests participants when adding a comment
+* Feat: Display the number of open merge requests of each repository, in the list of repositories
 
 ## v2.1.0
 * Close an issue if a merge request has '#<id>' in it title, id being the id of the issue
