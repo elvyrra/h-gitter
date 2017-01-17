@@ -112,6 +112,7 @@ class RepoController extends Controller {
                         $mergeRequests += count($repo->getOpenMergeRequests());
 
                         return View::make($this->getPlugin()->getView('repos/repo-info.tpl'), array(
+                            'repo' => $repo,
                             'members' => count($members) + 1,
                             'mergeRequests' => $mergeRequests
                         ));
