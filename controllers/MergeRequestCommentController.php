@@ -70,6 +70,9 @@ class MergeRequestCommentController extends Controller {
                 $repo = Repo::getById($this->repoId);
                 $mr = MergeRequest::getById($this->mergeRequestId);
 
+                $mr->participants[] = App::session()->getUser()->id;
+                $mr->save();
+
                 $subject = Lang::get($this->_plugin . '.new-comment-subject', array(
                     'author' => App::session()->getUser()->username,
                     'id' => $mr->id
