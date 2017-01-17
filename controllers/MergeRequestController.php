@@ -445,6 +445,7 @@ class MergeRequestController extends Controller {
         }, $mr->participants);
 
 
+        $this->addKeysToJavaScript($this->_plugin . '.delete-merge-request-confirmation');
         $this->addJavaScript($this->getPlugin()->getJsUrl('merge-request.js'));
 
         $content = View::make($this->getPlugin()->getView('merge-requests/merge-request.tpl'), array(

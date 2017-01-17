@@ -1,11 +1,7 @@
 'use strict';
 
-require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
+require(['app', 'emv', 'jquery', 'moment', 'lang'], (app, EMV, $, moment, Lang) => {
     window.moment = moment;
-
-    // class Discussion extends EMV {
-    //     constructor()
-    // }
 
     /**
      * This class manages the behavior of the merge request
@@ -220,6 +216,34 @@ require(['app', 'emv', 'jquery', 'moment'], (app, EMV, $, moment) => {
 
                 this.comments.splice(index, 1);
             });
+        }
+
+        /**
+         * Delete the merge request
+         */
+        deleteMergeRequest() {
+            const currentRoute = app.getRouteInformationFromUri(app.tabset.activeTab.uri);
+
+            if(confirm(Lang.get('h-gitter.delete-merge-request-confirmation'))) {
+                $.ajax({
+                    url : app.getUri('h-gitter-repo-merge-request', {
+                        repoId : currentRoute.data.repoId,
+                        mergeRequestId : currentRoute.data.mergeRequestId
+                    }),
+                    method : 'delete',
+                    dataType : 'json'
+                })
+
+                .done(() => {
+                    app.load(app.getUri('h-gitter-repo-merge-requests', {
+                        repoId : currentRoute.data.repoId
+                    }));
+                })
+
+                .fail((xhr) => {
+                    app.notify('error', xhr.responseJSON && xhr.responseJSON.message || xhr.responseText);
+                });
+            }
         }
     }
 

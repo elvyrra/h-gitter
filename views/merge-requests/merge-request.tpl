@@ -3,7 +3,7 @@
         <div class="col-xs-12">
             <h3 class="pull-left">{{ $mr->title }}</h3>
             {button class="btn-primary pull-right" icon="pencil" href="{uri action='h-gitter-repo-merge-request' repoId='{$mr->repoId}' mergeRequestId='{$mr->id}'}" target="dialog"}
-            {button class="btn-danger pull-right" icon="trash" title="{text key='h-gitter.merge-request-delete-btn'}"}
+            {button class="btn-danger pull-right" icon="trash" e-click="$root.deleteMergeRequest" title="{text key='h-gitter.merge-request-delete-btn'}"}
         </div>
     </div>
     {if($mr->description)}
