@@ -99,6 +99,24 @@ class RepoController extends Controller {
                         return Utils::timeAgo($value);
                     }
                 ),
+
+                'info' => array(
+                    'independant' => true,
+                    'label' => '',
+                    'sort' => false,
+                    'search' => false,
+                    'display' => function($value, $field, $repo) {
+                        // Display general information on the project (number of repositories, number of merge request, number of issues)
+                        $members = $repo->getUsers();
+
+                        $mergeRequests += count($repo->getOpenMergeRequests());
+
+                        return View::make($this->getPlugin()->getView('repos/repo-info.tpl'), array(
+                            'members' => count($members) + 1,
+                            'mergeRequests' => $mergeRequests
+                        ));
+                    }
+                )
             )
         ));
 
@@ -106,6 +124,7 @@ class RepoController extends Controller {
             return $list->display();
         }
 
+        $this->addCss($this->getPlugin()->getCssUrl('repos-list.less'));
         return NoSidebarTab::make(array(
             'title' => Lang::get($this->_plugin . '.repos-list-title', array(
                 'project' => $project->name
@@ -139,7 +158,7 @@ class RepoController extends Controller {
             ));
         }
 
-        if(!$repo->isUserMaster()) {
+        if($repo && !$repo->isUserMaster()) {
             throw new ForbiddenException();
         }
 
@@ -273,7 +292,7 @@ class RepoController extends Controller {
 
         switch($form->submitted()) {
             case false :
-                $this->addJavaScript($this->getPlugin()->getJsUrl('edit-repo.js'));
+                $this->addJavaScript($this->getPlugin()->getJsUrl('repos/edit-repo.js'));
 
                 return Dialogbox::make(array(
                     'title' => Lang::get($this->_plugin . '.edit-repo-title'),
@@ -457,7 +476,7 @@ class RepoController extends Controller {
             ));
         }
 
-        $content = View::make($this->getPlugin()->getView('repo-index.tpl'), array(
+        $content = View::make($this->getPlugin()->getView('repos/repo-index.tpl'), array(
             'contentId' => 'h-gitter-repo-content',
             'repo' => $repo,
             'menuItems' => $menuItems,

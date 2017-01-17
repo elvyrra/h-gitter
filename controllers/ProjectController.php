@@ -99,7 +99,7 @@ class ProjectController extends Controller {
                             $mergeRequests += count($repo->getOpenMergeRequests());
                         }
 
-                        return View::make($this->getPlugin()->getView('project-info.tpl'), array(
+                        return View::make($this->getPlugin()->getView('projects/project-info.tpl'), array(
                             'members' => count($members) + 1,
                             'repos' => count($repos),
                             'mergeRequests' => $mergeRequests
@@ -229,7 +229,7 @@ class ProjectController extends Controller {
 
                     new HtmlInput(array(
                         'name' => 'privileges-list',
-                        'value' => View::make($this->getPlugin()->getView('project-privileges.tpl'))
+                        'value' => View::make($this->getPlugin()->getView('projects/project-privileges.tpl'))
                     ))
                 ),
 
