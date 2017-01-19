@@ -1,7 +1,7 @@
 {
     "title": "H Gitt'r",
     "description": "This plugin is a web interface to manage your git repositories",
-    "version": "2.1.1.4",
+    "version": "2.1.1.5",
     "author": "Elvyrra SAS",
     "dependencies": {
         "h-tracker" : {

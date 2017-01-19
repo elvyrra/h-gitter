@@ -109,7 +109,7 @@ class RepoController extends Controller {
                         // Display general information on the project (number of repositories, number of merge request, number of issues)
                         $members = $repo->getUsers();
 
-                        $mergeRequests += count($repo->getOpenMergeRequests());
+                        $mergeRequests = count($repo->getOpenMergeRequests());
 
                         return View::make($this->getPlugin()->getView('repos/repo-info.tpl'), array(
                             'repo' => $repo,
