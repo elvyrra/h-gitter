@@ -293,12 +293,12 @@ class RepoController extends Controller {
 
         switch($form->submitted()) {
             case false :
-                $this->addJavaScript($this->getPlugin()->getJsUrl('repos/edit-repo.js'));
+                $this->addJavaScript($this->getPlugin()->getJsUrl('edit-repo.js'));
 
                 return Dialogbox::make(array(
                     'title' => Lang::get($this->_plugin . '.edit-repo-title'),
                     'icon' => 'git-square',
-                    'page' => View::make($this->getPlugin()->getView('edit-repo.tpl'), array(
+                    'page' => View::make($this->getPlugin()->getView('repos/edit-repo.tpl'), array(
                         'form' => $form,
                         'users' => $users
                     ))
