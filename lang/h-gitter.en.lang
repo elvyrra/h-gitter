@@ -85,6 +85,9 @@ clone-repo-description = "You need to export a SSH key in your settings"
 
 ; Repository code
 repo-code-branch-label = "Branch : "
+repo-code-file-no-exists = "This file does not exist for the revision '{revision}'"
+repo-code-folder-title = "No such file or directory"
+repo-code-folder-no-exists = "This folder does not exist for the revision '{revision}'"
 
 ; Commits list
 repo-commits-date-separator = "Commits on {date}"

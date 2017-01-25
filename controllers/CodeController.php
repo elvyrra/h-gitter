@@ -19,97 +19,112 @@ class CodeController extends Controller {
             $revision = trim($repo->run('rev-list -n 1 ' . $this->revision));
         }
 
-        $tree = explode(PHP_EOL, $repo->ls($this->path, $revision));
+        try {
+            $tree = explode(PHP_EOL, $repo->ls($this->path, $revision));
 
-        $elements = array();
-        foreach($tree as $element) {
-            if($element) {
-                $info = preg_split('/\s+/', $element);
-                $rights = $info[0];
-                $type = $info[1];
-                $basename = $info[3];
 
-                $path = ($this->path ? $this->path : '.') . '/' . $basename;
+            $elements = array();
+            foreach($tree as $element) {
+                if($element) {
+                    $info = preg_split('/\s+/', $element);
+                    $rights = $info[0];
+                    $type = $info[1];
+                    $basename = $info[3];
 
-                $commitHash = trim($repo->run('log --format="%H" -n 1 ' . $revision . ' -- ' . $path));
-                $commit = $repo->getCommitInformation($commitHash);
+                    $path = ($this->path ? $this->path : '.') . '/' . $basename;
 
-                $elements[] = (object) array(
-                    'type' => $type,
-                    'basename' => $basename,
-                    'path' => $path,
-                    'commit' => $commit->message,
-                    'hash' => $commit->hash,
-                    'date' => $commit->date,
-                    'author' => $commit->author
-                );
+                    $commitHash = trim($repo->run('log --format="%H" -n 1 ' . $revision . ' -- ' . $path));
+                    $commit = $repo->getCommitInformation($commitHash);
+
+                    $elements[] = (object) array(
+                        'type' => $type,
+                        'basename' => $basename,
+                        'path' => $path,
+                        'commit' => $commit->message,
+                        'hash' => $commit->hash,
+                        'date' => $commit->date,
+                        'author' => $commit->author
+                    );
+                }
+            }
+
+            usort($elements, function($element1, $element2) {
+                if($element1->type === $element2->type) {
+                    return $element1->basename < $element2->basename ? -1 : 1;
+                }
+
+                return $element1->type === 'tree' ? -1  : 1;
+            });
+
+            $list = new ItemList(array(
+                'id' => 'h-gitter-repo-tree',
+                'data' => $elements,
+                'navigation' => false,
+                'noHeader' => true,
+                'lines' => 'all',
+                'fields' => array(
+                    'basename' => array(
+                        'href' => function($value, $field, $element) {
+                            return  $element->type === 'tree' ?
+                                App::router()->getUri('h-gitter-repo-code-folder', array(
+                                    'repoId' => $this->repoId,
+                                    'type' => $this->type,
+                                    'revision' => $this->revision,
+                                    'path' => $element->path
+                                )) :
+                                App::router()->getUri('h-gitter-repo-code-file', array(
+                                    'repoId' => $this->repoId,
+                                    'type' => $this->type,
+                                    'revision' => $this->revision,
+                                    'path' => $element->path
+                                ));
+                        },
+                        'display' => function($value, $field, $element) {
+                            return Icon::make(array(
+                                'icon' => $element->type === 'tree' ? 'folder' : 'file-o',
+                                'size' => 'lg'
+                            )) . ' ' . $element->basename;
+                        },
+                    ),
+
+                    'commit' => array(
+                        'class' => 'text-primary',
+                        'href' => function($value, $field, $element) {
+                            return App::router()->getUri('h-gitter-repo-commit', array(
+                                'repoId' => $this->repoId,
+                                'commit' => $element->hash
+                            ));
+                        }
+                    ),
+
+                    'author' => array(),
+
+                    'date' => array(
+                        'display' => function($value) {
+                            return Utils::timeAgo($value);
+                        }
+                    )
+                )
+            ));
+
+            if($list->isRefreshing()) {
+                return $list->display();
             }
         }
-
-        usort($elements, function($element1, $element2) {
-            if($element1->type === $element2->type) {
-                return $element1->basename < $element2->basename ? -1 : 1;
-            }
-
-            return $element1->type === 'tree' ? -1  : 1;
-        });
-
-        $list = new ItemList(array(
-            'id' => 'h-gitter-repo-tree',
-            'data' => $elements,
-            'navigation' => false,
-            'noHeader' => true,
-            'lines' => 'all',
-            'fields' => array(
-                'basename' => array(
-                    'href' => function($value, $field, $element) {
-                        return  $element->type === 'tree' ?
-                            App::router()->getUri('h-gitter-repo-code-folder', array(
-                                'repoId' => $this->repoId,
-                                'type' => $this->type,
-                                'revision' => $this->revision,
-                                'path' => $element->path
-                            )) :
-                            App::router()->getUri('h-gitter-repo-code-file', array(
-                                'repoId' => $this->repoId,
-                                'type' => $this->type,
-                                'revision' => $this->revision,
-                                'path' => $element->path
-                            ));
-                    },
-                    'display' => function($value, $field, $element) {
-                        return Icon::make(array(
-                            'icon' => $element->type === 'tree' ? 'folder' : 'file-o',
-                            'size' => 'lg'
-                        )) . ' ' . $element->basename;
-                    },
-                ),
-
-                'commit' => array(
-                    'class' => 'text-primary',
-                    'href' => function($value, $field, $element) {
-                        return App::router()->getUri('h-gitter-repo-commit', array(
-                            'repoId' => $this->repoId,
-                            'commit' => $element->hash
-                        ));
-                    }
-                ),
-
-                'author' => array(),
-
-                'date' => array(
-                    'display' => function($value) {
-                        return Utils::timeAgo($value);
-                    }
-                )
-            )
-        ));
+        catch(GitException $err) {
+            // The current folder does not exist in the selected revision
+            $list = View::make(Theme::getSelected()->getView('error.tpl'), array(
+                'level' => 'warning',
+                'icon' => 'exclamation-triangle',
+                'title' => Lang::get($this->_plugin . '.repo-code-folder-title'),
+                'message' => Lang::get($this->_plugin . '.repo-code-folder-no-exists', array(
+                    'revision' => $revision
+                )),
+                'trace' => array()
+            ));
+        }
 
         $breadcrumb = $this->getBreadcrumb();
-
-        if($list->isRefreshing()) {
-            return $list->display();
-        }
 
         $content = View::make($this->getPlugin()->getView('code/folder.tpl'), array (
             'list' => $list,
@@ -135,7 +150,15 @@ class CodeController extends Controller {
             $revision = trim($repo->run('rev-list -n 1 ' . $revision));
         }
 
-        $fileContent = $repo->show($this->path, $revision);
+        try {
+            $fileContent = $repo->show($this->path, $revision);
+        }
+        catch(GitException $err) {
+            // The file does not exist for the selected revision
+            $fileContent = Lang::get($this->_plugin . '.repo-code-file-no-exists', array(
+                'revision' => $revision
+            ));
+        }
 
         $breadcrumb = $this->getBreadcrumb();
 
