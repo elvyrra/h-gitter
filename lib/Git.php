@@ -427,8 +427,8 @@ class Git {
      * Get the differences between two branches
      * @returns string
      */
-    public function diff($branch1, $branch2) {
-        return $this->run('diff ' . $branch1 . ' ' . $branch2 . ' --');
+    public function diff($branch1, $branch2, $options = '', $file = '') {
+        return $this->run('diff ' . $options . ' ' . $branch1 . ' ' . $branch2 . ' -- ' . $file);
     }
 
 

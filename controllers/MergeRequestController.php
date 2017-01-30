@@ -365,12 +365,14 @@ class MergeRequestController extends Controller {
         $mr->formattedDate = Utils::timeAgo($mr->ctime);
 
         $commit = $repo->getCommitInformation($mr->from, false);
-        $diff = $repo->getDiff($mr->to, $mr->from);
 
         $acceptForm = $this->accept();
 
         switch (App::request()->getParams('section')) {
             case 'diff':
+                $diff = $repo->getDiff($mr->to, $mr->from);
+                $diffNumber = count($diff['differences']);
+
                 $discussionsTab = array(
                     'content' => '',
                     'href' => App::router()->getUri(
@@ -392,8 +394,10 @@ class MergeRequestController extends Controller {
                         'repo' => $repo,
                         'mr' => $mr,
                         'diff' => $diff
-                    ))
+                    )),
                 );
+
+                $this->addCss('//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/monokai-sublime.min.css');
 
                 break;
 
@@ -424,11 +428,14 @@ class MergeRequestController extends Controller {
                     ),
                     'content' => ''
                 );
+
+                $diffNumber = count(explode(PHP_EOL, trim($repo->diff($mr->to, $mr->from, '--name-status'))));
+
                 break;
         }
 
         $discussionsTab['title'] = Lang::get($this->_plugin . '.merge-request-discussions-tab-title');
-        $diffTab['title'] = Lang::get($this->_plugin . '.merge-request-diff-tab-title') . ' <span class="badge">' . count($diff['differences']) . '</span>';
+        $diffTab['title'] = Lang::get($this->_plugin . '.merge-request-diff-tab-title') . ' <span class="badge">' . $diffNumber . '</span>';
 
         // Get merge request discussion
         $comments = $mr->getComments();
@@ -464,6 +471,22 @@ class MergeRequestController extends Controller {
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
         ))->display('merge-requests', $content);
+    }
+
+
+    public function fileDiff() {
+        $repo = Repo::getById($this->repoId);
+        $mr = MergeRequest::getByExample(new DBExample(array(
+            'id' => $this->mergeRequestId,
+            'repoId' => $this->repoId
+        )));
+
+
+        $diff = $repo->getDiff($mr->to, $mr->from, $this->path);
+
+        return View::make($this->getPlugin()->getView('diff/file-diff.tpl'), array(
+            'fileDiffs' => $diff['differences'][$this->path]
+        ));
     }
 
 

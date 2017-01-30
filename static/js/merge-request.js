@@ -1,6 +1,17 @@
 'use strict';
 
-require(['app', 'emv', 'jquery', 'moment', 'lang'], (app, EMV, $, moment, Lang) => {
+require.config({
+    paths : {
+        highlight : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min'
+    },
+    shim : {
+        highlight : {
+            exports : ['hljs']
+        }
+    }
+});
+
+require(['app', 'emv', 'jquery', 'moment', 'lang', 'highlight'], (app, EMV, $, moment, Lang, hljs) => {
     window.moment = moment;
 
     /**
@@ -86,6 +97,29 @@ require(['app', 'emv', 'jquery', 'moment', 'lang'], (app, EMV, $, moment, Lang) 
                     newCommentForm.reset();
                 };
             }
+
+            $('.file-diff .code pre').each((index, block) => {
+                hljs.highlightBlock(block);
+            });
+
+            $('.expand-diff').click(function() {
+                const self = this;
+                const parent = $(this).parent();
+                const tabInfo = app.getRouteInformationFromUri(app.tabset.activeTab.uri);
+
+                $.get(app.getUri('h-gitter-merge-request-file-diff', {
+                    repoId : tabInfo.data.repoId,
+                    mergeRequestId : tabInfo.data.mergeRequestId,
+                    path : $(this).data('path')
+                }))
+
+                .done((response) => {
+                    $(self).replaceWith(response);
+                    $(parent).find('.code pre').each((index, block) => {
+                        hljs.highlightBlock(block);
+                    });
+                });
+            });
         }
 
         /**

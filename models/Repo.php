@@ -305,37 +305,34 @@ class Repo extends Model {
      * @param  string $new The new revision
      * @return array       The structured difference
      */
-    public function getDiff($old, $new) {
+    public function getDiff($old, $new, $file = '') {
         // Get the raw difference
-        $rawDiff = $this->diff($old, $new);
         $result = array(
             'additions' => 0,
             'deletions' => 0,
             'differences' => array()
         );
 
-        if(!$rawDiff) {
+        $rawDiff = $this->diff($old, $new, '', $file);
+        if(empty($rawDiff)) {
             return $result;
         }
 
-        $blocks = array_slice(preg_split('/diff \-\-git .*$/m', $rawDiff), 1);
+        $blocks = array_slice(preg_split('/(diff \-\-git .*$)/m', $rawDiff, -1, PREG_SPLIT_DELIM_CAPTURE), 1);
 
-        foreach($blocks as $block) {
-            $block = ltrim($block);
+        for($j = 0; $j < count($blocks); $j+= 2) {
+            $title = $blocks[$j];
+            if(preg_match('#^diff \-\-git a/(.+?) b/(.+?)#', $title, $match)) {
+                $filename = $match[1];
+            }
+
+            $block = ltrim($blocks[$j + 1]);
             $type = 'modified';
 
-            if(substr($block, 0, 5) === 'index' || substr($block, 0, 8) === 'new file') {
-                // New files / File modification
-                preg_match('/^\+\+\+ b\/(.*)$/m', $block, $match);
-                $filename = $match[1];
-                if(substr($block, 0, 8) === 'new file') {
-                    $type = 'added';
-                }
+            if(substr($block, 0, 3) === 'new') {
+                $type = 'added';
             }
-            else {
-                // File deletion
-                preg_match('/^\-\-\- a\/(.*)$/m', $block, $match);
-                $filename = $match[1];
+            elseif(substr($block, 0, 7) === 'deleted') {
                 $type = 'deleted';
             }
 
@@ -344,70 +341,138 @@ class Repo extends Model {
                 'type' => $type,
                 'additions' => 0,
                 'deletions' => 0,
-                'extension' => CodeController::getInstance()->getFileAceLanguage($filename)
+                // 'extension' => CodeController::getInstance()->getFileAceLanguage($filename),
+                'extension' => $extension = pathinfo($filename, PATHINFO_EXTENSION)
             );
 
-            // Get all the differences block in the file
-            $subBlocks = preg_split('/^(\@\@ \-\d+(?:,\d+)? \+\d+(?:,\d+)? \@\@)/m', $block, -1, PREG_SPLIT_DELIM_CAPTURE);
-            $subBlocks = array_slice($subBlocks, 1);
+            if($type !== 'deleted') {
+                // Get all the differences block in the file
+                $subBlocks = preg_split('/^(\@\@ \-\d+(?:,\d+)? \+\d+(?:,\d+)? \@\@)/m', $block, -1, PREG_SPLIT_DELIM_CAPTURE);
+                $subBlocks = array_slice($subBlocks, 1);
 
 
-            for($i = 0; $i < count($subBlocks); $i += 2) {
-                preg_match('/^\@\@ \-(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? \@\@/', $subBlocks[$i], $match);
+                for($i = 0; $i < count($subBlocks); $i += 2) {
+                    preg_match('/^\@\@ \-(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? \@\@/', $subBlocks[$i], $match);
 
-                $leftFirstLine = $match[1];
-                $leftOffset = 0;
+                    $leftFirstLine = $match[1];
+                    $leftOffset = 0;
 
-                $rightFirstLine = $match[3];
-                $rightOffset = 0;
+                    $rightFirstLine = $match[3];
+                    $rightOffset = 0;
 
-                $lines = array_slice(explode(PHP_EOL, $subBlocks[$i + 1]), 1, -1);
-                $details = array();
+                    $lines = array_slice(explode(PHP_EOL, $subBlocks[$i + 1]), 1, -1);
+                    $details = array();
 
 
-                foreach($lines as $line) {
-                    $detailsLine = array();
+                    foreach($lines as $line) {
+                        $detailsLine = array();
 
-                    if(substr($line, 0, 1) === '+') {
-                        $detailsLine['rightLineNumber'] = $rightFirstLine + $rightOffset;
-                        $detailsLine['leftLineNumber'] = '';
-                        $detailsLine['type'] = 'addition';
-                        $detailsLine['code'] = substr($line, 1);
-                        $rightOffset++;
-                        $result['differences'][$filename]['additions'] ++;
+                        if(substr($line, 0, 1) === '+') {
+                            $detailsLine['rightLineNumber'] = $rightFirstLine + $rightOffset;
+                            $detailsLine['leftLineNumber'] = '';
+                            $detailsLine['type'] = 'addition';
+                            $detailsLine['code'] = substr($line, 1);
+                            $rightOffset++;
+                            $result['differences'][$filename]['additions'] ++;
+                        }
+                        elseif(substr($line, 0, 1) === '-') {
+                            $detailsLine['leftLineNumber'] = $leftFirstLine + $leftOffset;
+                            $detailsLine['rightLineNumber'] = '';
+                            $detailsLine['type'] = 'deletion';
+                            $detailsLine['code'] = substr($line, 1);
+                            $leftOffset++;
+                            $result['differences'][$filename]['deletions'] ++;
+                        }
+                        else {
+                            $detailsLine['rightLineNumber'] = $rightFirstLine + $rightOffset;
+                            $detailsLine['leftLineNumber'] = $leftFirstLine + $leftOffset;
+                            $detailsLine['type'] = '';
+                            $detailsLine['code'] = substr($line, 1);
+                            $rightOffset++;
+                            $leftOffset++;
+                        }
+
+                        $details[] = $detailsLine;
                     }
-                    elseif(substr($line, 0, 1) === '-') {
-                        $detailsLine['leftLineNumber'] = $leftFirstLine + $leftOffset;
-                        $detailsLine['rightLineNumber'] = '';
-                        $detailsLine['type'] = 'deletion';
-                        $detailsLine['code'] = substr($line, 1);
-                        $leftOffset++;
-                        $result['differences'][$filename]['deletions'] ++;
-                    }
-                    else {
-                        $detailsLine['rightLineNumber'] = $rightFirstLine + $rightOffset;
-                        $detailsLine['leftLineNumber'] = $leftFirstLine + $leftOffset;
-                        $detailsLine['type'] = '';
-                        $detailsLine['code'] = substr($line, 1);
-                        $rightOffset++;
-                        $leftOffset++;
-                    }
 
-                    $details[] = $detailsLine;
+                    $result['differences'][$filename]['differences'][] = array(
+                        'summary' => $subBlocks[$i],
+                        'details' => $details,
+                        'code' => implode(PHP_EOL, $lines)
+                    );
+
                 }
 
-                $result['differences'][$filename]['differences'][] = array(
-                    'summary' => $subBlocks[$i],
-                    'details' => $details
-                );
-
+                $result['additions'] += $result['differences'][$filename]['additions'];
+                $result['deletions'] += $result['differences'][$filename]['deletions'];
             }
-
-            $result['additions'] += $result['differences'][$filename]['additions'];
-            $result['deletions'] += $result['differences'][$filename]['deletions'];
         }
 
         return $result;
+    }
+
+    /**
+     * Get main information about a difference
+     * @param   string $old The old revision
+     * @param   string $new The new revision
+     */
+    public function getDiffStats($old, $new) {
+        $lines = explode(PHP_EOL, trim($this->diff($old, $new, '--name-status')));
+
+        $result = array(
+            'total' => count($lines),
+            'files' => array(),
+        );
+
+        // Get files status
+        foreach($lines as $line) {
+            list($type, $file) = preg_split('/\s+/', trim($line));
+
+            $result['files'][$file] = array(
+                'status' => $type
+            );
+        }
+
+        // Get diff summary
+        // $line = trim($this->diff($old, $new, '--shortstat'));
+
+        // if(preg_match('/(\d+) files changed, (\d+) insertions\(\+\), (\d+) deletions/', $line, $match)) {
+        //     $result['summary'] = array(
+        //         'additions' => $match[2],
+        //         'deletions' => $match[3]
+        //     );
+        // }
+
+        // // Get the diff sumary
+        // $lines = explode(PHP_EOL, trim($this->diff($old, $new, '--summary')));
+
+        // foreach($lines as $line) {
+        //     list($additions, $deletions, $file) = preg_split('/\s+/', trim($line));
+
+        //     $result['files'][$file]['additions'] = $additions;
+        //     $result['files'][$file]['deletions'] = $deletions;
+        // }
+
+        return $result;
+    }
+
+    /**
+     * Get short stats diffenrece
+     * @param   string $old The old revision
+     * @param   string $new The new revision
+     */
+    public function getShortStatDiff($old, $new) {
+        $line = trim($this->diff($old, $new, '--shortstat'));
+
+        if(preg_match('/(\d+) files changed, (\d+) insertions\(\+\), (\d+) deletions/', line, $match)) {
+            return array(
+                'files' => $match[1],
+                'additions' => $match[2],
+                'deletions' => $match[3]
+            );
+        }
+
+        return null;
     }
 
 

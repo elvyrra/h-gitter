@@ -38,6 +38,10 @@ This plugin is devloped by the company Elvyrra
 
 # Changeset :
 
+## v2.2.0
+* Do not display to heavy diff in commit page and merge request
+* Click to display the diff on to heavy diff
+
 ## v2.1.1
 * Fix bugs on projects and repositories privileges
 * Display only the number of open issues

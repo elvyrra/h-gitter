@@ -85,6 +85,7 @@ class CommitController extends Controller {
         $diff = $repo->getDiff($commit->parent ? $commit->hash . '^1' : '', $commit->hash);
 
         $this->addJavaScript($this->getPlugin()->getJsUrl('commit-diff.js'));
+        $this->addCss('//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/monokai-sublime.min.css');
 
         $content = View::make($this->getPlugin()->getView('commits/commit.tpl'), array(
             'repo' => $repo,
@@ -95,5 +96,17 @@ class CommitController extends Controller {
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
         ))->display('commits', $content);
+    }
+
+
+    public function fileDiff() {
+        $repo = Repo::getById($this->repoId);
+        $commit = $repo->getCommitInformation($this->commit);
+
+        $diff = $repo->getDiff($commit->parent ? $commit->hash . '^1' : '', $commit->hash, $this->path);
+
+        return View::make($this->getPlugin()->getView('diff/file-diff.tpl'), array(
+            'fileDiffs' => $diff['differences'][$this->path]
+        ));
     }
 }

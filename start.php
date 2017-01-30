@@ -107,12 +107,19 @@ App::router()->auth(App::session()->isAllowed('h-gitter.access-plugin'), functio
                     'action' => 'CommitController.index'
                 ));
 
-                // Display the list of commits of the repository, for a given branch
+                // Display the information about a commit, with file differences
                 App::router()->get('h-gitter-repo-commit', '/commit/{commit}', array(
                     'where' => array(
                         'commit' => '[a-f0-9A-F]+'
                     ),
                     'action' => 'CommitController.commit'
+                ));
+
+                App::router()->get('h-gitter-repo-commit-file-diff', '/commit/{commit}/files/{path}', array(
+                    'where' => array(
+                        'commit' => '[a-f0-9A-F]+'
+                    ),
+                    'action' => 'CommitController.fileDiff'
                 ));
 
                 /**
@@ -184,6 +191,11 @@ App::router()->auth(App::session()->isAllowed('h-gitter.access-plugin'), functio
                     // Display a merge request
                     App::router()->get('h-gitter-repo-display-merge-request', '/display', array(
                         'action' => 'MergeRequestController.display'
+                    ));
+
+                    // Display the diff of a file in a merge request
+                    App::router()->get('h-gitter-merge-request-file-diff', '/files/{path}', array(
+                        'action' => 'MergeRequestController.fileDiff'
                     ));
 
                     // Accept a merge request

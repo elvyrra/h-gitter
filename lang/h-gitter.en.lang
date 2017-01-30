@@ -173,6 +173,8 @@ discussion-response-btn = "Respond"
 discussion-new-btn = "New comment"
 discussion-opened = "Opened by {username} {ago}"
 remove-comment-title = "Remove the comment"
+merge-request-diff-file-removed = "Removed"
+merge-request-diff-heavy = "The diff is to heavy, ita has been collapsed. Click to expand it"
 
 ; comment form
 comment-form-comment-placeholder = "Write your comment. Markdown is supported"

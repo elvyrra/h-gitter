@@ -43,6 +43,12 @@
     {import file="../diff/revision-diff-summary.tpl"}
 
     {foreach($diff['differences'] as $filename => $fileDiffs)}
-        {import file="../diff/file-diff.tpl" filename="{$filename}" fileDiffs="{$fileDiffs}"}
+        {if($fileDiffs['type'] === 'deleted')}
+            <div class="alert alert-info">
+                <span class="lead">{{ $filename }}</span> &rarr; {text key="h-gitter.merge-request-diff-file-removed"}
+            </div>
+        {else}
+            {import file="./commit-file.tpl" filename="{$filename}" fileDiffs="{$fileDiffs}"}
+        {/if}
     {/foreach}
 </div>
