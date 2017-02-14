@@ -79,7 +79,7 @@ class MergeRequestCommentController extends Controller {
                 ));
                 $content = View::make($this->getPLugin()->getView('notifications/new-comment.tpl'), array(
                     'author' => App::session()->getUser()->username,
-                    'mrID' => $mr->id,
+                    'mrId' => $mr->id,
                     'comment' => $comment->comment,
                     'repoId' => $repo->id
                 ));

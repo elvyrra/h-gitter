@@ -57,7 +57,7 @@
     </div>
 
     <template id="merge-request-discussion">
-        <div class="media col-xs-12" e-each="{$data : $discussion.comments, $item : 'comment'}">
+        <div class="media col-xs-12" e-each="{$data : discussion.comments, $item : 'comment'}">
             <div class="media-left">
                 <img e-if="$root.getParticipant(userId).avatar" e-attr="{src : $root.getParticipant(userId).avatar}" class="user-avatar small" />
                 <span class="user-avatar small" e-if="!$root.getParticipant(userId).avatar">
@@ -72,9 +72,9 @@
             <hr />
         </div>
         <div class="col-xs-12">
-            <input type="text" class="form-control new-comment-input" placeholder="{text key='h-gitter.discussion-response-btn'}" e-click="$root.displayCommentResponseForm.bind($root)" e-show="!$discussion.commentFormDisplayed" />
-            <div class="response-wrapper col-xs-12" e-show="$discussion.commentFormDisplayed">
-                <div e-html="commentForm" e-attr="{id : 'h-gitter-discussion-response-' + $discussion.id}"></div>
+            <input type="text" class="form-control new-comment-input" placeholder="{text key='h-gitter.discussion-response-btn'}" e-click="$root.displayCommentResponseForm.bind($root)" e-show="!discussion.commentFormDisplayed" />
+            <div class="response-wrapper col-xs-12" e-show="discussion.commentFormDisplayed">
+                <div e-html="commentForm" e-attr="{id : 'h-gitter-discussion-response-' + discussion.id}"></div>
             </div>
         </div>
     </template>
