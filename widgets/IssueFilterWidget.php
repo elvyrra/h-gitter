@@ -24,6 +24,12 @@ class IssueFilterWidget extends Widget {
     public function display() {
         $filters = $this->getFilters();
 
+        $status = json_decode(Option::get('h-tracker.status'), true);
+
+        usort($status, function($status1, $status2) {
+            return $status1['order'] - $status2['order'];
+        });
+
         $form = new Form(array(
             'id' => 'h-gitter-issues-filter-form',
             'attributes' => array(
@@ -46,7 +52,7 @@ class IssueFilterWidget extends Widget {
                             )
                         );
                     },
-                    json_decode(Option::get('h-tracker.status'), true)
+                    $status
                 )
             )
         ));
