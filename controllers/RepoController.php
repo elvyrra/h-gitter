@@ -95,9 +95,7 @@ class RepoController extends Controller {
 
                 'mtime' => array(
                     'label' => Lang::get($this->_plugin . '.repos-list-mtime-label'),
-                    'display' => function($value) {
-                        return Utils::timeAgo($value);
-                    }
+                    'format' => 'relative-time'
                 ),
 
                 'info' => array(

@@ -579,4 +579,24 @@ class Repo extends Model {
 
         return '';
     }
+
+
+    /**
+     * Send a notification to the repo users
+     * @param  string $subject The notification subject
+     * @param  string $content The notification content
+     */
+    public function notify($subject, $content) {
+        $recipients = array_filter($this->getUsers(), function($user) {
+            return $user->id !== App::session()->getUser()->id;
+        });
+
+        $email = new Mail();
+        $email  ->subject($subject)
+                ->content($content)
+                ->to(array_map(function($user) {
+                    return $user->email;
+                }, $recipients))
+                ->send();
+    }
 }

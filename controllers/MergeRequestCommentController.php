@@ -80,23 +80,11 @@ class MergeRequestCommentController extends Controller {
                 $content = View::make($this->getPLugin()->getView('notifications/new-comment.tpl'), array(
                     'author' => App::session()->getUser()->username,
                     'mrId' => $mr->id,
-                    'comment' => $comment->comment,
+                    'comment' => $comment->parsed,
                     'repoId' => $repo->id
                 ));
 
-                $recipients = $mr->getParticipants(array(
-                    App::session()->getUser()->id
-                ));
-
-                if(!empty($recipients)) {
-                    $email = new Mail();
-                    $email  ->subject($subject)
-                            ->content($content)
-                            ->to(array_map(function($user) {
-                                return $user->email;
-                            }, $recipients))
-                            ->send();
-                }
+                $repo->notify($subject, $content);
 
                 return array(
                     'data' => $comment

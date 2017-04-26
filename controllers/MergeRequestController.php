@@ -118,20 +118,7 @@ class MergeRequestController extends Controller {
                 'mrId' => $mr->id
             ));
 
-            $recipients = $mr->getParticipants(array(
-                App::session()->getUser()->id
-            ));
-
-
-            if(!empty($recipients)) {
-                $email = new Mail();
-                $email  ->subject($subject)
-                        ->content($content)
-                        ->to(array_map(function($user) {
-                            return $user->email;
-                        }, $recipients))
-                        ->send();
-            }
+            $repo->notify($subject, $content);
 
             App::response()->setStatus(204);
 
@@ -275,8 +262,6 @@ class MergeRequestController extends Controller {
                     'repoId' => $repo->id,
                     'mrId' => $mr->id
                 ));
-
-                $recipients = $repo->getUsers();
             }
             else {
                 $subject = Lang::get($this->_plugin . '.merge-request-modification-subject', array(
@@ -289,22 +274,9 @@ class MergeRequestController extends Controller {
                     'repoId' => $repo->id,
                     'mrId' => $mr->id
                 ));
-
-                $recipients = $mr->getParticipants(array(
-                    App::session()->getUser()->id
-                ));
             }
 
-
-            if(!empty($recipients)) {
-                $email = new Mail();
-                $email  ->subject($subject)
-                        ->content($content)
-                        ->to(array_map(function($user) {
-                            return $user->email;
-                        }, $recipients))
-                        ->send();
-            }
+            $repo->notify($subject, $content);
 
             return $form->response(Form::STATUS_SUCCESS);
         }
@@ -577,19 +549,7 @@ class MergeRequestController extends Controller {
             'mrId' => $mr->id
         ));
 
-        $recipients = $mr->getParticipants(array(
-            App::session()->getUser()->id
-        ));
-
-        if(!empty($recipients)) {
-            $email = new Mail();
-            $email  ->subject($subject)
-                    ->content($content)
-                    ->to(array_map(function($user) {
-                        return $user->email;
-                    }, $recipients))
-                    ->send();
-        }
+        $repo->notify($subject, $content);
 
         // Check if an issue is attached to this merge request, and in this case, close it
         if(preg_match_all('/\#(\d+)(?:\b|$)/', $mr->title, $matches, PREG_SET_ORDER)) {
