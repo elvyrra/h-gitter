@@ -340,9 +340,11 @@ class MergeRequestController extends Controller {
 
         $acceptForm = $this->accept();
 
+        $mergeBase = $repo->mergeBase($mr->to, $mr->from);
+
         switch (App::request()->getParams('section')) {
             case 'diff':
-                $diff = $repo->getDiff($mr->to, $mr->from);
+                $diff = $repo->getDiff($mergeBase, $mr->from);
                 $diffNumber = count($diff['differences']);
 
                 $discussionsTab = array(
@@ -401,7 +403,7 @@ class MergeRequestController extends Controller {
                     'content' => ''
                 );
 
-                $diffNumber = count(explode(PHP_EOL, trim($repo->diff($mr->to, $mr->from, '--name-status'))));
+                $diffNumber = count(explode(PHP_EOL, trim($repo->diff($mergeBase, $mr->from, '--name-status'))));
 
                 break;
         }

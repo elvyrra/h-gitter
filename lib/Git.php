@@ -433,6 +433,17 @@ class Git {
 
 
     /**
+     * Get the last common ancestor between twon branches
+     * @param  string $branch1 The first branch
+     * @param  string $branch2 The second branch
+     * @return string          The last common ancestor
+     */
+    public function mergeBase($branch1, $branch2) {
+        return trim($this->run('merge-base ' . $branch1 . ' ' . $branch2));
+    }
+
+
+    /**
      * Display the content of a file in the repository, for a given version
      * @param  string $file    The path to the file, relative to the repository root folder
      * @param  string $version The version to read (default HEAD)
