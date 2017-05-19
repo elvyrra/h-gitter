@@ -75,7 +75,8 @@ class MergeRequestCommentController extends Controller {
 
                 $subject = Lang::get($this->_plugin . '.new-comment-subject', array(
                     'author' => App::session()->getUser()->username,
-                    'id' => $mr->id
+                    'id' => $mr->id,
+                    'repo' => $repo->name
                 ));
                 $content = View::make($this->getPLugin()->getView('notifications/new-comment.tpl'), array(
                     'author' => App::session()->getUser()->username,
