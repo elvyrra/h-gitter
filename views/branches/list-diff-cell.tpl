@@ -1,8 +1,4 @@
-{if($branch->default)}
-    <span class="badge lead alert-success branch-badge">{text key="h-gitter.branch-default"}</span>
-{elseif($branch->merged)}
-    <span class="badge lead alert-info branch-badge">{text key="h-gitter.branch-merged"}</span>
-{else}
+{if($branch->ahead || $branch->behind)}
     <div class="branch-diff-summary" title="{{{ $branch->diffTitle }}}">
         <div class="ahead diff-count {if(!$branch->ahead)}no-diff{/if}">
             <div class="value"> {{ $branch->ahead }}</div>

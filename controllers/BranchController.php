@@ -9,7 +9,9 @@ class BranchController extends Controller {
     public function index() {
         $repo = Repo::getById($this->repoId);
 
-        $branches = array_map(function($branch) use ($repo) {
+        $mergedBranches = $repo->getMergedBranches();
+
+        $branches = array_map(function($branch) use ($repo, $mergedBranches) {
             $isDefaultBranch = $branch === $repo->defaultBranch;
 
             if(!$isDefaultBranch) {
@@ -20,6 +22,8 @@ class BranchController extends Controller {
                 $ahead = 0;
                 $behind = 0;
             }
+
+            $merged = in_array($branch, $mergedBranches);
 
             $info = $repo->getCommitInformation($branch, false);
 
@@ -49,7 +53,7 @@ class BranchController extends Controller {
                 'default' => $branch === $repo->defaultBranch,
                 'ahead' => $ahead,
                 'behind' => $behind,
-                'merged' => $ahead == 0 && $behind == 0,
+                'merged' => $merged,
                 'time' => $info->date,
                 'date' => Utils::timeAgo((int) $info->date),
                 'author' => $info->author,
@@ -101,7 +105,7 @@ class BranchController extends Controller {
                                 'title' => Lang::get($this->_plugin . '.delete-branch-title')
                             ));
 
-                            if(!$branch->merged && $branch->behind) {
+                            if(!$branch->merged) {
                                 $result .= new ButtonInput(array(
                                     'icon' => 'code-fork icon-flip-vertical',
                                     'class' => 'pull-right',

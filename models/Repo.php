@@ -247,7 +247,7 @@ class Repo extends Model {
      * @param   bool        $useCache If set to true (default), try to get information from the cache, and store the information in the cache
      * @return  CommitCache           The commit information
      */
-    public function getCommitInformation($hash, $useCache = true) {
+    public function getCommitInformation($hash, $useCache = true, $options = '') {
         if($useCache) {
             $cache = CommitCache::getById($hash);
 
@@ -258,7 +258,7 @@ class Repo extends Model {
             }
         }
 
-        $info = $this->run('log --pretty="format:%H%n%h%n%s%n%ct%n%an%n%ae%n%P" -n 1 ' . $hash . ' --');
+        $info = $this->run('log --pretty="format:%H%n%h%n%s%n%ct%n%an%n%ae%n%P" -n 1 ' . $hash . ' ' . $options . ' --');
         list($longHash, $shortHash, $message, $date, $author, $email, $parents) = array_map('trim', explode(PHP_EOL, $info));
 
         $user = User::getByExample(new DBExample(array(
@@ -473,6 +473,26 @@ class Repo extends Model {
         }
 
         return null;
+    }
+
+
+    /**
+     * Get the list of the branches that are merged on the default branch
+     * @return array The merged branches
+     */
+    public function getMergedBranches() {
+        $branches = explode(PHP_EOL, $this->run('branch --merged ' . $this->defaultBranch));
+
+        foreach($branches as $i => &$branch) {
+            $branch = trim($branch);
+            $branch = str_replace('* ', '', $branch);
+
+            if(!$branch) {
+                unset($branches[$i]);
+            }
+        }
+
+        return $branches;
     }
 
 

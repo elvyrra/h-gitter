@@ -11,9 +11,7 @@ require.config({
     }
 });
 
-require(['app', 'emv', 'jquery', 'moment', 'lang', 'highlight'], (app, EMV, $, moment, Lang, hljs) => {
-    window.moment = moment;
-
+require(['app', 'emv', 'jquery', 'lang', 'highlight'], (app, EMV, $, Lang, hljs) => {
     /**
      * This class manages the behavior of the merge request
      */

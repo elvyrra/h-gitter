@@ -1,6 +1,6 @@
 'use strict';
 
-require(['app', 'emv', 'jquery', 'lang', 'moment'], (app, EMV, $, Lang) => {
+require(['app', 'emv', 'jquery', 'lang'], (app, EMV, $, Lang) => {
     /**
      * Delete a repository branch
      */

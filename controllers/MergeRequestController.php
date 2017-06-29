@@ -5,6 +5,8 @@ namespace Hawk\Plugins\HGitter;
 use \Hawk\Plugins\HTracker as HTracker;
 
 class MergeRequestController extends Controller {
+    const ISSUE_LINK_REGEX = '/\#(\d+)(?:\b|$)/';
+
     /**
      * Display the list of the merge requests on the repository
      * @returns string The HTML response
@@ -130,7 +132,7 @@ class MergeRequestController extends Controller {
 
         $title = '';
         if($branch) {
-            $commit = $repo->getCommitInformation($branch, false);
+            $commit = $repo->getCommitInformation($branch, false, '--no-merges');
             $title = $commit->message;
         }
 
@@ -294,7 +296,7 @@ class MergeRequestController extends Controller {
         $title = '';
 
         if($canMerge) {
-            $commit = $repo->getCommitInformation($this->from, false);
+            $commit = $repo->getCommitInformation($this->from, false, '--no-merges');
             $title = $commit->message;
         }
 
@@ -335,6 +337,14 @@ class MergeRequestController extends Controller {
         $author = User::getById($mr->userId);
 
         $mr->formattedDate = Utils::timeAgo($mr->ctime);
+        $mr->title = preg_replace_callback(self::ISSUE_LINK_REGEX, function($match) use($repo) {
+            $url = App::router()->getUri('h-gitter-repo-issue', array(
+                'repoId' => $repo->id,
+                'issueId' => $match[1]
+            ));
+
+            return '<a href="' . $url . '" target="newtab">' . $match[0] . '</a>';
+        }, $mr->title);
 
         $commit = $repo->getCommitInformation($mr->from, false);
 
@@ -554,7 +564,7 @@ class MergeRequestController extends Controller {
         $repo->notify($subject, $content);
 
         // Check if an issue is attached to this merge request, and in this case, close it
-        if(preg_match_all('/\#(\d+)(?:\b|$)/', $mr->title, $matches, PREG_SET_ORDER)) {
+        if(preg_match_all(self::ISSUE_LINK_REGEX, $mr->title, $matches, PREG_SET_ORDER)) {
             foreach($matches as $match) {
                 $issueId = $match[1];
                 $issue = HTracker\Ticket::getById($issueId);
