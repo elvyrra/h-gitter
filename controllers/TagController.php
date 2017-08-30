@@ -93,7 +93,9 @@ class TagController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('tags', $content);
+        ))->display('tags', $content, Lang::get($this->_plugin . '.repo-tags-title', array(
+            'repo' => $repo->name
+        )));
     }
 
     public function edit() {

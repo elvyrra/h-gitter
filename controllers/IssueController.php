@@ -187,7 +187,16 @@ class IssueController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('issues', $content, array(IssueFilterWidget::getInstance()));
+        ))->display(
+            'issues',
+            $content,
+            Lang::get($this->_plugin . '.repo-issues-title', array(
+                'repo' => $this->_repo->name
+            )),
+            array(
+                IssueFilterWidget::getInstance()
+            )
+        );
 
     }
 
@@ -227,7 +236,14 @@ class IssueController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('issues', $content);
+        ))->display(
+            'issues',
+            $content,
+            Lang::get($this->_plugin . '.repo-issue-title', array(
+                'repo' => $this->_repo->name,
+                'issue' => $this->issueId,
+            ))
+        );
 
         return $result;
     }

@@ -144,7 +144,11 @@ class BranchController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('branches', $content);
+        ))
+
+        ->display('branches', $content, Lang::get($this->_plugin . '.repo-branches-title', array(
+            'repo' => $repo->name
+        )));
     }
 
 

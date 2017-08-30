@@ -1,17 +1,6 @@
 'use strict';
 
-require.config({
-    paths : {
-        highlight : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min'
-    },
-    shim : {
-        highlight : {
-            exports : ['hljs']
-        }
-    }
-});
-
-require(['app', 'emv', 'jquery', 'lang', 'highlight'], (app, EMV, $, Lang, hljs) => {
+require(['app', 'emv', 'jquery', 'lang'], (app, EMV, $, Lang) => {
     /**
      * This class manages the behavior of the merge request
      */
@@ -96,13 +85,8 @@ require(['app', 'emv', 'jquery', 'lang', 'highlight'], (app, EMV, $, Lang, hljs)
                 };
             }
 
-            $('.file-diff .code pre').each((index, block) => {
-                hljs.highlightBlock(block);
-            });
-
             $('.expand-diff').click(function() {
                 const self = this;
-                const parent = $(this).parent();
                 const tabInfo = app.getRouteInformationFromUri(app.tabset.activeTab.uri);
 
                 $.get(app.getUri('h-gitter-merge-request-file-diff', {
@@ -113,9 +97,6 @@ require(['app', 'emv', 'jquery', 'lang', 'highlight'], (app, EMV, $, Lang, hljs)
 
                 .done((response) => {
                     $(self).replaceWith(response);
-                    $(parent).find('.code pre').each((index, block) => {
-                        hljs.highlightBlock(block);
-                    });
                 });
             });
         }
@@ -141,6 +122,18 @@ require(['app', 'emv', 'jquery', 'lang', 'highlight'], (app, EMV, $, Lang, hljs)
             const currentRoute = app.getRouteInformationFromUri(app.tabset.activeTab.uri);
             const wrapper = $('#h-gitter-discussion-response-' + discussion.id);
 
+            if(discussion.commentFormDisplayed) {
+                discussion.commentFormDisplayed = false;
+
+                if(!discussion.comments.length) {
+                    const index = this.discussions.indexOf(discussion);
+
+                    this.discussions.splice(index, 1);
+                }
+
+                return;
+            }
+
             $.get(app.getUri(
                 'h-gitter-merge-request-comment',
                 {
@@ -159,7 +152,10 @@ require(['app', 'emv', 'jquery', 'lang', 'highlight'], (app, EMV, $, Lang, hljs)
             ))
 
             .then((response) => {
-                discussion.commentForm = response;
+                var uid = EMV.utils.uid();
+
+                this.$registerTemplate(uid, response);
+                discussion.commentForm = uid;
 
                 const formId = wrapper.find('form').attr('id');
 

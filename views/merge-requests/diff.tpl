@@ -19,10 +19,10 @@
         {/assign}
 
         {assign name="panelContent"}
-            {if($fileDiffs['additions'] + $fileDiffs['deletions'] > 100)}
+            {if($fileDiffs['additions'] + $fileDiffs['deletions'] > 150)}
                 <div class="text-center pointer expand-diff" data-path="{{{ $filename }}}">{text key="h-gitter.merge-request-diff-heavy"}</div>
             {else}
-                {import file="../diff/file-diff.tpl" fileDiffs="{$fileDiffs}"}
+                {import file="../diff/file-diff.tpl" fileDiffs="{$fileDiffs}" comments="true" filename="{$filename}"}
             {/if}
         {/assign}
 

@@ -61,7 +61,7 @@ App::router()->auth(App::session()->isAllowed('h-gitter.access-plugin'), functio
                 ));
 
                 // Display the home page of a repo
-                App::router()->get('h-gitter-repo-home', '/home', array(
+                App::router()->get('h-gitter-repo-home', '', array(
                     'action' => 'RepoController.home'
                 ));
 
@@ -80,7 +80,7 @@ App::router()->auth(App::session()->isAllowed('h-gitter.access-plugin'), functio
                     'action' => 'CodeController.displayFolder'
                 ));
 
-                // Display the content of a folder
+                // Display a file
                 App::router()->get('h-gitter-repo-code-file', '/blob/{type}/{revision}/{path}', array(
                     'where' => array (
                         'type' => 'commit|branch|tag',
@@ -91,6 +91,19 @@ App::router()->auth(App::session()->isAllowed('h-gitter.access-plugin'), functio
                         'type' => 'branch'
                     ),
                     'action' => 'CodeController.displayFile'
+                ));
+
+                // Display the history of a file
+                App::router()->get('h-gitter-repo-file-history', '/history/{type}/{revision}/{path}', array(
+                    'where' => array (
+                        'type' => 'commit|branch|tag',
+                        'revision' => '[^\/]+'
+                    ),
+                    'default' => array (
+                        'revision' => 'master',
+                        'type' => 'branch'
+                    ),
+                    'action' => 'CodeController.fileHistory'
                 ));
 
                 /**

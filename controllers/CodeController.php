@@ -116,7 +116,7 @@ class CodeController extends Controller {
             $list = View::make(Theme::getSelected()->getView('error.tpl'), array(
                 'level' => 'warning',
                 'icon' => 'exclamation-triangle',
-                'title' => Lang::get($this->_plugin . '.repo-code-folder-title'),
+                'title' => Lang::get($this->_plugin . '.repo-code-path-no-exists-title'),
                 'message' => Lang::get($this->_plugin . '.repo-code-folder-no-exists', array(
                     'revision' => $revision
                 )),
@@ -128,12 +128,22 @@ class CodeController extends Controller {
 
         $content = View::make($this->getPlugin()->getView('code/folder.tpl'), array (
             'list' => $list,
-            'breadcrumb' => $breadcrumb
+            'breadcrumb' => $breadcrumb,
+            'type' => $this->type,
+            'revision' => $this->revision,
+            'path' => $this->path,
+            'repoId' => $this->repoId
         ));
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('code', $content);
+        ))
+
+        ->display('code', $content, Lang::get($this->_plugin . ($this->path ? '.repo-code-title' : '.repo-code-root-title'), array(
+            'path' => $this->path,
+            'branch' => $this->revision,
+            'repo' => $repo->name
+        )));
     }
 
     /**
@@ -166,12 +176,34 @@ class CodeController extends Controller {
             'basename' => basename($this->path),
             'breadcrumb' => $breadcrumb,
             'fileContent' => $fileContent,
-            'extension' => $this->getFileAceLanguage($this->path)
+            'extension' => $this->getFileAceLanguage($this->path),
+            'type' => $this->type,
+            'revision' => $this->revision,
+            'path' => $this->path,
+            'repoId' => $this->repoId
         ));
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('code', $content);
+        ))
+
+        ->display('code', $content, Lang::get($this->_plugin . '.repo-code-title', array(
+            'path' => $this->path,
+            'repo' => $repo->name
+        )));
+    }
+
+
+
+    /**
+     * Display the file history
+     */
+    public function fileHistory() {
+        return CommitController::getInstance(array(
+            'repoId' => $this->repoId,
+            'revision' => $this->revision,
+            'type' => $this->type
+        ))->index($this->path);
     }
 
 
@@ -229,7 +261,7 @@ class CodeController extends Controller {
         }
     }
 
-    private function getBreadcrumb() {
+    public function getBreadcrumb() {
         $repo = Repo::getById($this->repoId);
 
         $breadcrumb = array();

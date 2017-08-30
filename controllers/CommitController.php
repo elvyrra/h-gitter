@@ -9,11 +9,11 @@ class CommitController extends Controller {
      * Display the list of the commits of a repository, on a given branch
      * @returns string The HTML response
      */
-    public function index() {
+    public function index($filename = '') {
         $repo = Repo::getById($this->repoId);
         $start = App::request()->getParams('start');
         $end = $start + self::MAX_LIST_ITEMS;
-        $maxCommits = $repo->run('rev-list --count ' . $this->revision);
+        $maxCommits = $repo->run('rev-list --count ' . $this->revision . ' -- ' . $filename);
 
         $cmd = 'log --pretty="format:%H"';
 
@@ -21,7 +21,7 @@ class CommitController extends Controller {
             $cmd .= ' --skip=' . $start;
         }
 
-        $cmd .= ' --max-count=' . self::MAX_LIST_ITEMS . ' ' . $this->revision . ' --';
+        $cmd .= ' --max-count=' . self::MAX_LIST_ITEMS . ' ' . $this->revision . ' -- ' . $filename;
 
         $hashes = array_map('trim', explode(PHP_EOL, $repo->run($cmd)));
 
@@ -49,17 +49,41 @@ class CommitController extends Controller {
         if(!$start) {
             $this->addJavaScript($this->getPlugin()->getJsUrl('commits.js'));
 
+            $breadcrumb = array();
+
+            if($filename) {
+                $breadcrumb = CodeController::getInstance(array(
+                    'repoId' => $this->repoId,
+                    'path' => $filename,
+                    'type' => $this->type,
+                    'revision' => $this->revision
+                ))->getBreadcrumb();
+            }
 
             $content = View::make($this->getPlugin()->getView('commits/list.tpl'), array(
                 'repo' => $repo,
                 'allCommits' => $byDayCommits,
                 'maxCommits' => $maxCommits,
-                'end' => $end
+                'end' => $end,
+                'filename' => $filename,
+                'breadcrumb' => $breadcrumb
             ));
 
             return RepoController::getInstance(array(
                 'repoId' => $this->repoId
-            ))->display('commits', $content);
+            ))
+            ->display(
+                $filename ? 'code' : 'commits',
+                $content,
+                $filename ?
+                    Lang::get($this->_plugin . '.repo-history-title', array(
+                        'repo' => $repo->name,
+                        'path' => $filename
+                    )) :
+                    Lang::get($this->_plugin . '.repo-commits-title', array(
+                        'repo' => $repo->name
+                    ))
+            );
         }
 
         return  View::make($this->getPlugin()->getView('commits/list-items.tpl'), array(
@@ -95,7 +119,11 @@ class CommitController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('commits', $content);
+        ))
+        ->display('commits', $content, Lang::get($this->_plugin . '.repo-commit-title', array(
+            'commit' => $commit->shortHash,
+            'repo' => $repo->name
+        )));
     }
 
 

@@ -48,7 +48,15 @@ class MergeRequestCommentController extends Controller {
                             'line' => App::request()->getParams('line'),
                             'parentId' => App::request()->getParams('parentId')
                         )
-                    )
+                    ),
+                    'cancelButton' => new ButtonInput(array(
+                        'name' => 'cancel',
+                        'value' => Lang::get('main.cancel-button'),
+                        'attributes' => array(
+                            'e-click' => '$root.displayCommentResponseForm.bind($root)'
+                        ),
+                        'class' => 'pull-right'
+                    ))
                 ))->display();
 
             default :

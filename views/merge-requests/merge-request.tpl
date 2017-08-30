@@ -72,9 +72,9 @@
             <hr />
         </div>
         <div class="col-xs-12">
-            <input type="text" class="form-control new-comment-input" placeholder="{text key='h-gitter.discussion-response-btn'}" e-click="$root.displayCommentResponseForm.bind($root)" e-show="!discussion.commentFormDisplayed" />
+            {button label="{text key='h-gitter.discussion-response-btn'}" e-click="$root.displayCommentResponseForm.bind($root)" e-show="!discussion.commentFormDisplayed"}
             <div class="response-wrapper col-xs-12" e-show="discussion.commentFormDisplayed">
-                <div e-html="commentForm" e-attr="{id : 'h-gitter-discussion-response-' + discussion.id}"></div>
+                <div e-template="commentForm" e-attr="{id : 'h-gitter-discussion-response-' + discussion.id}"></div>
             </div>
         </div>
     </template>

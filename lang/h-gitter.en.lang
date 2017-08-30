@@ -84,12 +84,19 @@ clone-repo-title = "Clone with SSH"
 clone-repo-description = "You need to export a SSH key in your settings"
 
 ; Repository code
+repo-code-root-title = "Gitt'r : {branch} - Code - {repo}"
+repo-code-title = "Gott'r : {path} - Code - {repo}"
 repo-code-branch-label = "Branch : "
 repo-code-file-no-exists = "This file does not exist for the revision '{revision}'"
-repo-code-folder-title = "No such file or directory"
+repo-code-path-no-exists-title = "No such file or directory"
 repo-code-folder-no-exists = "This folder does not exist for the revision '{revision}'"
+repo-code-history-btn = "History"
 
 ; Commits list
+repo-commits-title = "Gitt'r : Commits - {repo}"
+repo-commit-title = "Gitt'r : {commit} - Commits - {repo} "
+repo-history-title = "Gitt'r : History for {path} - {repo}"
+repo-history-intro = "History for : "
 repo-commits-date-separator = "Commits on {date}"
 repo-commits-time-and-author = "By {author} at {time}"
 repo-commits-browse-files = "Browse files"
@@ -113,6 +120,7 @@ choose-revision-widget-title = "Switch branches / tags"
 choose-revision-widget-placeholder = "Type a branch or a tag"
 
 ; Branches list
+repo-branches-title = "Gitt'r : Branches - {repo}"
 new-branch-btn = "Create branch"
 compare-branches-btn = "Compare"
 last-branch-update = "Updated on {date} by {user}"
@@ -135,6 +143,7 @@ new-branch-form-name-already-exists = "This branch already exists"
 branch-comparison-title = "Comparing : "
 
 ; Tags list
+repo-tags-title = "Gitt'r : Tags - {repo}"
 new-tag-btn = "New tag"
 delete-tag-title = "Delete"
 confirm-delete-tag = "Do you really want to remove this tag ?"
@@ -146,6 +155,8 @@ new-tag-branch-label = "The branch to apply the tag on"
 existing-tag-message = "This tag already exists on this repository"
 
 ; Merge requests list
+repo-merge-requests-title = "Gitt'r : Merge requests - {repo}"
+repo-merge-request-title = "Gitt'r : {title} - Merge request - {repo}"
 new-merge-request-btn = "New merge request"
 mr-list-opend-by = "Opened {date} by {username}"
 merge-requests-list-edit-btn = "Edit"
@@ -182,6 +193,8 @@ comment-form-submit-btn = "Comment"
 score-comment = "{username} scored {score}"
 
 ; Issues list
+repo-issues-title = "Gitt'r : Issues - {repo}"
+repo-issue-title = "Gitt'r : Issue #{issue} - {repo}"
 issue-new-btn = "New issue"
 create-branch-from-issue-btn = "Create branch"
 

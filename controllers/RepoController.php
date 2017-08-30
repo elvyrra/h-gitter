@@ -409,7 +409,7 @@ class RepoController extends Controller {
      * display the content of a repository
      * @returns string The HTML result
      */
-    public function display($section = 'home', $sectionContent = '', $widgets = array()) {
+    public function display($section = 'home', $sectionContent = '', $title = '', $widgets = array()) {
         $repo = Repo::getById($this->repoId);
 
         $menuItems = array(
@@ -492,7 +492,7 @@ class RepoController extends Controller {
         )));
 
         return LeftSidebarTab::make(array(
-            'title' => Lang::get($this->_plugin . '.repo-index-title', array(
+            'title' => $title ? $title : Lang::get($this->_plugin . '.repo-index-title', array(
                 'repo' => $repo->name
             )),
             'icon' => 'git-square',

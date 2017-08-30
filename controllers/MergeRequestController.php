@@ -89,7 +89,13 @@ class MergeRequestController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('merge-requests', $content);
+        ))->display(
+            'merge-requests',
+            $content,
+            Lang::get($this->_plugin . '.repo-merge-requests-title', array(
+                'repo' => $repo->name
+            ))
+        );
     }
 
     /**
@@ -454,7 +460,12 @@ class MergeRequestController extends Controller {
 
         return RepoController::getInstance(array(
             'repoId' => $this->repoId
-        ))->display('merge-requests', $content);
+        ))
+
+        ->display('merge-requests', $content, Lang::get($this->_plugin . '.repo-merge-request-title', array(
+            'repo' => $repo->name,
+            'title' => $mr->title
+        )));
     }
 
 
