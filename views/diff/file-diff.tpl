@@ -9,7 +9,7 @@
                 <td class="prev-line-number">
                     {{ $line['leftLineNumber'] }}
                     {if(!empty($comments) && $line['rightLineNumber'])}
-                        <i class="icon icon-comments icon-lg open-comment-form" e-show="!diffDiscussions['{{{ $filename }}}'][{{$line['rightLineNumber'] }}]" e-click="displayDiffCommentForm('{{{ $filename }}}', {{$line['rightLineNumber'] }})"></i>
+                        <i class="icon icon-comments icon-lg open-comment-form" e-show="!diffDiscussions['{{{ $filename }}}'] || !diffDiscussions['{{{ $filename }}}'][{{$line['rightLineNumber'] }}]" e-click="displayDiffCommentForm('{{{ $filename }}}', {{$line['rightLineNumber'] }})"></i>
                     {/if}
                 </td>
                 <td class="new-line-number">{{ $line['rightLineNumber'] }}</td>
